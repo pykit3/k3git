@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-tmpl
+k3git
 ============
 
-.. automodule:: tmpl
+.. automodule:: k3git
 
 .. toctree::
    :maxdepth: 2
@@ -19,16 +19,13 @@ tmpl
 Documentation for the Code
 **************************
 
-Exceptions
+Classes
 ----------
 
-.. autoexception::  SomeError
+.. autoclass::  GitOpt
+     :members:
 
 
-Functions
----------
-
-.. autofunction::  foo
 
 Indices and tables
 ==================

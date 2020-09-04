@@ -1,8 +1,8 @@
 import doctest
 
-import tmpl
+import k3git
 
 
 def load_tests(loader, tests, ignore):
-    tests.addTests(doctest.DocTestSuite(tmpl))
+    tests.addTests(doctest.DocTestSuite(k3git))
     return tests
