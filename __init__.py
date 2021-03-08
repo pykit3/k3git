@@ -18,5 +18,6 @@ from .gitopt import GitOpt
 from .git_wrapper import Git
 
 __all__ = [
+    'Git',
     'GitOpt',
 ]

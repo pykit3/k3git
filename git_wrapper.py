@@ -2,7 +2,6 @@
 # coding: utf-8
 
 import os
-import copy
 import logging
 
 
@@ -10,10 +9,9 @@ from k3str import to_utf8
 from k3handy.path import pabs
 
 from k3handy.cmd import cmdf
-from k3handy.cmd import cmdpass
-from k3handy.cmd import cmdx
 
 logger = logging.getLogger(__name__)
+
 
 class Git(object):
 
@@ -41,7 +39,7 @@ class Git(object):
     # remote
 
     def remote_get(self, name, flag=''):
-        return self.cmdf("remote", "get-url", name, flag=flag+'n0')
+        return self.cmdf("remote", "get-url", name, flag=flag + 'n0')
 
     def remote_add(self, name, url, flag='x', **options):
         self.cmdf("remote", "add", name, url, **options, flag=flag)
@@ -49,12 +47,12 @@ class Git(object):
     # blob
 
     def blob_new(self, f, flag=''):
-        return self.cmdf("hash-object", "-w", f, flag=flag+'n0')
+        return self.cmdf("hash-object", "-w", f, flag=flag + 'n0')
 
     #  tree
 
     def tree_of(self, commit, flag=''):
-        return self.cmdf("rev-parse", commit + "^{tree}", flag=flag+'n0')
+        return self.cmdf("rev-parse", commit + "^{tree}", flag=flag + 'n0')
 
     def tree_items(self, treeish, name_only=False, with_size=False, flag='x'):
         args = []
@@ -63,7 +61,7 @@ class Git(object):
 
         if with_size:
             args.append("--long")
-        return self.cmdf("ls-tree", treeish, *args, flag=flag+'no')
+        return self.cmdf("ls-tree", treeish, *args, flag=flag + 'no')
 
     def tree_add_obj(self, cur_tree, path, treeish):
 
@@ -134,7 +132,7 @@ class Git(object):
         itm = self.treeitem_new(name, obj, mode=mode)
 
         newitems.append(itm)
-        new_treeish = self.cmdf("mktree", input="\n".join(newitems), flag=flag+'n0')
+        new_treeish = self.cmdf("mktree", input="\n".join(newitems), flag=flag + 'n0')
         return new_treeish
 
     # treeitem
@@ -174,11 +172,10 @@ class Git(object):
         Returns:
             str: sha256 in lower-case hex. If no such object is found, it returns None.
         """
-        return self.cmdf("rev-parse", "--verify", "--quiet", name, flag=flag+'n0')
-
+        return self.cmdf("rev-parse", "--verify", "--quiet", name, flag=flag + 'n0')
 
     def obj_type(self, obj, flag=''):
-        return self.cmdf("cat-file", "-t", obj, flag=flag+'n0')
+        return self.cmdf("cat-file", "-t", obj, flag=flag + 'n0')
 
     # wrapper of cli
 
@@ -192,6 +189,16 @@ class Git(object):
     def _args(self):
         return self.opt.to_args()
 
-
     def cmdf(self, *args, flag='', **kwargs):
         return cmdf(self.gitpath, *self._args(), *args, flag=flag, **self._opt(**kwargs))
+
+    def out(self, fd, *msg):
+
+        if self.ctxmsg is not None:
+            os.write(fd, to_utf8(self.ctxmsg) + b": ")
+
+        for (i, m) in enumerate(msg):
+            os.write(fd, to_utf8(m))
+            if i != len(msg) - 1:
+                os.write(fd, b" ")
+        os.write(fd, b"\n")

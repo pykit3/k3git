@@ -12,7 +12,6 @@ from k3fs import fwrite
 
 from k3handy.cmd import cmd0
 from k3handy.cmd import cmdf
-from k3handy.cmd import cmdpass
 from k3handy.cmd import cmdx
 from k3handy.cmd import cmdout
 from k3handy import CalledProcessError
@@ -24,19 +23,11 @@ dd = k3ut.dd
 
 this_base = os.path.dirname(__file__)
 
-giftp = pjoin(this_base, "gift")
 origit = "git"
 
-emptyp = pjoin(this_base, "testdata", "empty")
 superp = pjoin(this_base, "testdata", "super")
 supergitp = pjoin(this_base, "testdata", "supergit")
 wowgitp = pjoin(this_base, "testdata", "wowgit")
-subbarp = pjoin(this_base, "testdata", "super", "foo", "bar")
-subwowp = pjoin(this_base, "testdata", "super", "foo", "wow")
-bargitp = pjoin(this_base, "testdata", "bargit")
-barp = pjoin(this_base, "testdata", "bar")
-
-execpath = cmd0(origit, '--exec-path')
 
 
 class BaseTest(unittest.TestCase):
@@ -49,43 +40,19 @@ class BaseTest(unittest.TestCase):
         # .git can not be track in a git repo.
         # need to manually create it.
         fwrite(pjoin(this_base, "testdata", "super", ".git"),
-                   "gitdir: ../supergit")
+               "gitdir: ../supergit")
 
     def tearDown(self):
         if os.environ.get("GIFT_NOCLEAN", None) == "1":
             return
         _clean_case()
 
-    def _remove_super_ref(self):
-        cmdx(giftp, "update-ref", "-d", "refs/remotes/super/head", cwd=subbarp)
-        cmdx(giftp, "update-ref", "-d", "refs/remotes/super/head", cwd=subwowp)
-
-    def _check_initial_superhead(self):
-        _, out, _ = cmdx(giftp, "rev-parse", "refs/remotes/super/head", cwd=subbarp)
-        self.assertEqual("466f0bbdf56b1428edf2aed4f6a99c1bd1d4c8af", out[0])
-
-        _, out, _ = cmdx(giftp, "rev-parse", "refs/remotes/super/head", cwd=subwowp)
-        self.assertEqual("6bf37e52cbafcf55ff4710bb2b63309b55bf8e54", out[0])
-
-    def _add_file_to_subbar(self):
-        fwrite(pjoin(subbarp, "newbar"), "newbar")
-        cmdx(giftp, "add", "newbar", cwd=subbarp)
-        cmdx(giftp, "commit", "-m", "add newbar", cwd=subbarp)
-
-        # TODO test no .gift file
-
-    def _gitoutput(self, cmds, lines, **kwargs):
-        _, out, _ = cmdx(*cmds, **kwargs)
-        self.assertEqual(lines, out)
-
-    def _nofile(self, *ps):
-        self.assertFalse(os.path.isfile(pjoin(*ps)), "no file in " + pjoin(*ps))
-
     def _fcontent(self, txt, *ps):
         self.assertTrue(os.path.isfile(pjoin(*ps)), pjoin(*ps) + " should exist")
 
         actual = fread(pjoin(*ps))
         self.assertEqual(txt, actual, "check file content")
+
 
 class TestGitInit(BaseTest):
 
@@ -95,7 +62,8 @@ class TestGitInit(BaseTest):
         self._fcontent("superman\n", superp, "imsuperman")
 
         self.assertRaises(CalledProcessError,
-                         g.checkout, "foo")
+                          g.checkout, "foo")
+
 
 class TestGitHighlevel(BaseTest):
 
@@ -105,7 +73,7 @@ class TestGitHighlevel(BaseTest):
         self._fcontent("superman\n", superp, "imsuperman")
 
         self.assertRaises(CalledProcessError,
-                         g.checkout, "foo")
+                          g.checkout, "foo")
 
     def test_fetch(self):
         g = Git(GitOpt(), cwd=superp)
@@ -132,6 +100,7 @@ class TestGitRev(BaseTest):
         t = g.rev_of("c3954c897dfe40a5b99b7145820eeb227210265c")
         self.assertEqual("c3954c897dfe40a5b99b7145820eeb227210265c", t)
 
+
 class TestGitRemote(BaseTest):
 
     def test_remote_get(self):
@@ -154,6 +123,7 @@ class TestGitRemote(BaseTest):
         t = g.remote_get("newremote")
         self.assertEqual("newremote-url", t)
 
+
 class TestGitBlob(BaseTest):
 
     def test_blob_new(self):
@@ -165,6 +135,7 @@ class TestGitBlob(BaseTest):
         content = cmd0(origit, "cat-file", "-p", blobhash, cwd=superp)
         self.assertEqual("newblob!!!", content)
 
+
 class TestGitTree(BaseTest):
 
     def test_tree_items(self):
@@ -174,26 +145,26 @@ class TestGitTree(BaseTest):
 
         lines = g.tree_items(tree)
         self.assertEqual([
-                '100644 blob 15d2fff1101916d7212371fea0f3a82bda750f6c\t.gift',
-                '100644 blob a668431ae444a5b68953dc61b4b3c30e066535a2\timsuperman'
+            '100644 blob 15d2fff1101916d7212371fea0f3a82bda750f6c\t.gift',
+            '100644 blob a668431ae444a5b68953dc61b4b3c30e066535a2\timsuperman'
         ], lines)
 
         lines = g.tree_items(tree, with_size=True)
         self.assertEqual([
-                '100644 blob 15d2fff1101916d7212371fea0f3a82bda750f6c     163\t.gift',
-                '100644 blob a668431ae444a5b68953dc61b4b3c30e066535a2       9\timsuperman'
+            '100644 blob 15d2fff1101916d7212371fea0f3a82bda750f6c     163\t.gift',
+            '100644 blob a668431ae444a5b68953dc61b4b3c30e066535a2       9\timsuperman'
         ], lines)
 
         lines = g.tree_items(tree, name_only=True)
         self.assertEqual([
-                '.gift',
-                'imsuperman'
+            '.gift',
+            'imsuperman'
         ], lines)
 
         lines = g.tree_items(tree, name_only=True, with_size=True)
         self.assertEqual([
-                '.gift',
-                'imsuperman'
+            '.gift',
+            'imsuperman'
         ], lines)
 
     def test_parse_tree_item(self):
@@ -310,6 +281,7 @@ class TestGitTree(BaseTest):
             "nested/imsuperman/b/c/imsuperman",
         ], files)
 
+
 class TestGitTreeItem(BaseTest):
 
     def test_treeitem_new(self):
@@ -326,17 +298,19 @@ class TestGitTreeItem(BaseTest):
         got = g.treeitem_new("foo", obj, mode='100755')
         self.assertEqual('100755 blob 15d2fff1101916d7212371fea0f3a82bda750f6c\tfoo', got)
 
-def _clean_case():
-    for d in ("empty", ):
-        p = pjoin(this_base, "testdata", d)
-        if os.path.exists(pjoin(p, ".git")):
-            cmdx(origit, "reset", "--hard", cwd=p)
-            cmdx(origit, "clean", "-dxf", cwd=p)
 
-    force_remove(pjoin(this_base, "testdata", "empty", "bar"))
-    force_remove(pjoin(this_base, "testdata", "empty", ".git"))
+class TestGitOut(BaseTest):
+
+    def test_out(self):
+        script = r'''import k3git; k3git.Git(k3git.GitOpt(), ctxmsg="foo").out(1, "bar", "wow")'''
+
+        got = cmdf('python', '-c', script, flag='x0')
+        self.assertEqual('foo: bar wow', got)
+
+
+def _clean_case():
+
     force_remove(pjoin(this_base, "testdata", "super", ".git"))
-    force_remove(barp)
     cmdx(origit, "reset", "testdata", cwd=this_base)
     cmdx(origit, "checkout", "testdata", cwd=this_base)
     cmdx(origit, "clean", "-dxf", cwd=this_base)
