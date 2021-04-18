@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import re
+import os
 
 #  https://stackoverflow.com/questions/31801271/what-are-the-supported-git-url-formats
 #  I found the list below. It is not complete since
@@ -69,6 +70,10 @@ rule_groups = [{
     "defaults": {
         "host": "github.com",
     },
+    "env": {
+        "committer": "GITHUB_USERNAME",
+        "token": "GITHUB_TOKEN",
+    },
     "provider": "github.com",
     "fmt": {
         "ssh": 'git@{host}:{user}/{repo}.git',
@@ -76,16 +81,18 @@ rule_groups = [{
         "https_token": 'https://{committer}:{token}@{host}/{user}/{repo}.git',
     },
     "patterns": [
+        # github.com/openacid/slim.git
+        r'github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$',
         # git@github.com:openacid/slim.git
-        r'git@github.com:(?P<user>.*?)/(?P<repo>.*?)(\.git)?(?P<branch>@.*?)?$',
+        r'git@github.com:(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$',
         # ssh://git@github.com/openacid/openacid.github.io
-        r'ssh://git@github.com/(?P<user>.*?)/(?P<repo>.*?)(?P<branch>@.*?)?$',
+        r'ssh://git@github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$',
         # https://committer:token@github.com/openacid/openacid.github.io.git
-        r'https://(?P<committer>.*?):(?P<token>.*?)@github.com/(?P<user>.*?)/(?P<repo>.*?)\.git(?P<branch>@.*?)?$',
+        r'https://(?P<committer>.*?):(?P<token>.*?)@github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$',
         # http://github.com/openacid/openacid.github.io.git
-        r'http://github.com/(?P<user>.*?)/(?P<repo>.*?)\.git(?P<branch>@.*?)?$',
+        r'http://github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$',
         # https://github.com/openacid/openacid.github.io.git
-        r'https://github.com/(?P<user>.*?)/(?P<repo>.*?)\.git(?P<branch>@.*?)?$',
+        r'https://github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$',
     ],
 },
 ]
@@ -152,6 +159,13 @@ class GitUrl(object):
                 if match:
                     d = match.groupdict()
                     d.update(g['defaults'])
+
+                    #  extend vars from env
+                    for varname, envname in g['env'].items():
+                        if varname not in d:
+                            v = os.environ.get(envname)
+                            if v is not None:
+                                d[varname] = v
 
                     return cls(d, g)
 
