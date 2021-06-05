@@ -28,6 +28,8 @@ origit = "git"
 superp = pjoin(this_base, "testdata", "super")
 supergitp = pjoin(this_base, "testdata", "supergit")
 wowgitp = pjoin(this_base, "testdata", "wowgit")
+branch_test_git_p = pjoin(this_base, "testdata", "branch_test_git")
+branch_test_worktree_p = pjoin(this_base, "testdata", "branch_test_worktree")
 
 
 class BaseTest(unittest.TestCase):
@@ -82,6 +84,51 @@ class TestGitHighlevel(BaseTest):
         hsh = g.cmdf('log', '-n1', '--format=%H', 'FETCH_HEAD', flag='0')
 
         self.assertEqual('6bf37e52cbafcf55ff4710bb2b63309b55bf8e54', hsh)
+
+
+class TestGitHead(BaseTest):
+
+    def test_head_branch(self):
+        # branch_test_git_p is a git-dir with one commit::
+        # * 1d5ae3d (HEAD, origin/master, master) A  a
+
+        # write a ".git" file to specify the git-dir for the containing
+        # git-work-tree.
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+        got = g.head_branch()
+        self.assertEqual('master', got)
+
+        # checkout to a commit pointing to no branch
+        # It should return None
+        g.checkout('origin/master')
+        got = g.head_branch()
+        self.assertIsNone(got)
+
+        g.checkout('master')
+
+
+class TestGitBranch(BaseTest):
+
+    def test_branch_default_remote(self):
+        # branch_test_git_p is a git-dir with one commit::
+        # * 1d5ae3d (HEAD, origin/master, master) A  a
+
+        # write a ".git" file to specify the git-dir for the containing
+        # git-work-tree.
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+        cases = [
+            ('master', 'origin'),
+            ('dev', 'upstream'),
+            ('not_a_branch', None), 
+        ]
+
+        for branch, remote in cases:
+            got = g.branch_default_remote(branch)
+            self.assertEqual(remote, got)
 
 
 class TestGitRev(BaseTest):

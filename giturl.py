@@ -80,6 +80,7 @@ rule_groups = [{
         "https": 'https://{host}/{user}/{repo}.git',
         "https_token": 'https://{committer}:{token}@{host}/{user}/{repo}.git',
     },
+    #  TODO match pattern and output the scheme of the matched 
     "patterns": [
         # github.com/openacid/slim.git
         r'github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$',
@@ -161,11 +162,11 @@ class GitUrl(object):
                     d.update(g['defaults'])
 
                     #  extend vars from env
-                    for varname, envname in g['env'].items():
-                        if varname not in d:
-                            v = os.environ.get(envname)
+                    for var_name, env_name in g['env'].items():
+                        if var_name not in d:
+                            v = os.environ.get(env_name)
                             if v is not None:
-                                d[varname] = v
+                                d[var_name] = v
 
                     return cls(d, g)
 

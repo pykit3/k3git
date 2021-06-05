@@ -6,9 +6,9 @@ import logging
 
 
 from k3str import to_utf8
-from k3handy.path import pabs
+from k3handy import pabs
 
-from k3handy.cmd import cmdf
+from k3handy import cmdf
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,25 @@ class Git(object):
 
     def fetch(self, name, flag=''):
         self.cmdf("fetch", name, flag=flag)
+
+    # branch
+
+    def branch_default_remote(self, branch, flag=''):
+        """
+        Returns the default remote name of a branch.
+        """
+        return self.cmdf('config', '--get',
+                    'branch.{}.remote'.format(branch),
+                    flag=flag+'n0')
+
+    # head
+
+    def head_branch(self, flag=''):
+        """
+        Returns the branch HEAD pointing to.
+        """
+        return self.cmdf('symbolic-ref', '--short', 'HEAD', flag=flag+'n0')
+
 
     # remote
 
