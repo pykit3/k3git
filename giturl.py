@@ -94,6 +94,26 @@ rule_groups = [{
         # https://github.com/openacid/openacid.github.io.git
         ('https', r'https://github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
     ],
+}, {
+    "defaults": {
+    },
+    "env": {
+    },
+    "provider": "*",
+    "fmt": {
+        "ssh": 'git@{host}:{user}/{repo}.git',
+        "https": 'https://{host}/{user}/{repo}.git',
+        "https_token": 'https://{committer}:{token}@{host}/{user}/{repo}.git',
+    },
+    "patterns": [
+        ('https', r'https://(?P<committer>.*?):(?P<token>.*?)@(?P<host>.*?)/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
+        ('https', r'http://(?P<host>.*?)/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
+        ('https', r'https://(?P<host>.*?)/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
+        ('ssh',   r'ssh://git@(?P<host>.*?)/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
+        ('ssh',   r'git@(?P<host>.*?):(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
+        ('ssh',   r'(?P<host>.*?)/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
+    ],
+
 },
 ]
 
@@ -131,7 +151,7 @@ class GitUrl(object):
 
                         - ``"https": 'https://{host}/{user}/{repo}.git'``,
 
-                        - ``"https_token": 'https://{committer}:{token}@{host}/{user}/{repo}.git'``,
+                        - ``"https" with token present in fields: 'https://{committer}:{token}@{host}/{user}/{repo}.git'``,
 
                         If absent, format by fields['sheme']
 

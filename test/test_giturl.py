@@ -111,6 +111,32 @@ class TestGitUrl(unittest.TestCase):
                  'https://github.com/openacid/slim.git',
                  'https://github.com/openacid/slim.git',
                 ),
+
+                # unknown provider
+
+                ('myhost.com/openacid/slim',
+                 'git@myhost.com:openacid/slim.git',
+                 'https://myhost.com/openacid/slim.git',
+                 'git@myhost.com:openacid/slim.git',
+                ),
+
+                ('ssh://git@myhost.com/openacid/slim',
+                 'git@myhost.com:openacid/slim.git',
+                 'https://myhost.com/openacid/slim.git',
+                 'git@myhost.com:openacid/slim.git',
+                ),
+
+                ('https://committer:token@myhost.com/openacid/slim.git',
+                 'git@myhost.com:openacid/slim.git',
+                 'https://committer:token@myhost.com/openacid/slim.git',
+                 'https://committer:token@myhost.com/openacid/slim.git',
+                ),
+
+                ('https://myhost.com/openacid/slim.git/',
+                 'git@myhost.com:openacid/slim.git',
+                 'https://myhost.com/openacid/slim.git',
+                 'https://myhost.com/openacid/slim.git',
+                ),
         )
 
         for inp, wantssh, wanthttps, want_default in cases:
