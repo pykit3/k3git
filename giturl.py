@@ -80,20 +80,19 @@ rule_groups = [{
         "https": 'https://{host}/{user}/{repo}.git',
         "https_token": 'https://{committer}:{token}@{host}/{user}/{repo}.git',
     },
-    #  TODO match pattern and output the scheme of the matched 
     "patterns": [
         # github.com/openacid/slim.git
-        r'github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$',
+        ('ssh',  r'github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
         # git@github.com:openacid/slim.git
-        r'git@github.com:(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$',
+        ('ssh', r'git@github.com:(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
         # ssh://git@github.com/openacid/openacid.github.io
-        r'ssh://git@github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$',
+        ('ssh', r'ssh://git@github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
         # https://committer:token@github.com/openacid/openacid.github.io.git
-        r'https://(?P<committer>.*?):(?P<token>.*?)@github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$',
+        ('https', r'https://(?P<committer>.*?):(?P<token>.*?)@github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
         # http://github.com/openacid/openacid.github.io.git
-        r'http://github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$',
+        ('https', r'http://github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
         # https://github.com/openacid/openacid.github.io.git
-        r'https://github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$',
+        ('https', r'https://github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
     ],
 },
 ]
@@ -105,10 +104,22 @@ class GitUrl(object):
     """
 
     def __init__(self, fields, rule_group):
+        """
+        Create a GitUrl object.
+
+        Args:
+
+            fields(dict): fields of url components, such as 'user', 'repo',
+                    'branch', 'token', 'committer'.
+
+            rule_group(dict): one of the predefined rule group this git-url
+                    matched and is also used to output plain text url.
+        """
+
         self.fields = fields
         self.rule_group = rule_group
 
-    def fmt(self, scheme):
+    def fmt(self, scheme=None):
         """
         format git url to scheme ssh or https
 
@@ -120,9 +131,17 @@ class GitUrl(object):
 
                         - ``"https": 'https://{host}/{user}/{repo}.git'``,
 
+                        - ``"https_token": 'https://{committer}:{token}@{host}/{user}/{repo}.git'``,
+
+                        If absent, format by fields['sheme']
+
         Returns:
             str: the formatted url
         """
+
+        if scheme is None:
+            scheme = self.fields['scheme']
+
         if scheme == 'https':
             if 'token' in self.fields:
                 fmt = self.rule_group['fmt']['https_token']
@@ -155,20 +174,24 @@ class GitUrl(object):
         """
 
         for g in rule_groups:
-            for p in g['patterns']:
+            for (scheme, p) in g['patterns']:
                 match = re.match(p, url)
-                if match:
-                    d = match.groupdict()
-                    d.update(g['defaults'])
+                if not match:
+                    continue
 
-                    #  extend vars from env
-                    for var_name, env_name in g['env'].items():
-                        if var_name not in d:
-                            v = os.environ.get(env_name)
-                            if v is not None:
-                                d[var_name] = v
+                d = match.groupdict()
+                d.update(g['defaults'])
 
-                    return cls(d, g)
+                d['scheme'] = scheme
+
+                #  extend vars from env
+                for var_name, env_name in g['env'].items():
+                    if var_name not in d:
+                        v = os.environ.get(env_name)
+                        if v is not None:
+                            d[var_name] = v
+
+                return cls(d, g)
 
         raise ValueError(
             'unknown url: {url};'.format(
