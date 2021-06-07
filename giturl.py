@@ -82,17 +82,17 @@ rule_groups = [{
     },
     "patterns": [
         # github.com/openacid/slim.git
-        ('ssh',  r'github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
+        ('ssh',  r'github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
         # git@github.com:openacid/slim.git
-        ('ssh', r'git@github.com:(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
+        ('ssh', r'git@github.com:(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
         # ssh://git@github.com/openacid/openacid.github.io
-        ('ssh', r'ssh://git@github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
+        ('ssh', r'ssh://git@github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
         # https://committer:token@github.com/openacid/openacid.github.io.git
-        ('https', r'https://(?P<committer>.*?):(?P<token>.*?)@github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
+        ('https', r'https://(?P<committer>.+?):(?P<token>.+?)@github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
         # http://github.com/openacid/openacid.github.io.git
-        ('https', r'http://github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
+        ('https', r'http://github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
         # https://github.com/openacid/openacid.github.io.git
-        ('https', r'https://github.com/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
+        ('https', r'https://github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
     ],
 }, {
     "defaults": {
@@ -106,12 +106,12 @@ rule_groups = [{
         "https_token": 'https://{committer}:{token}@{host}/{user}/{repo}.git',
     },
     "patterns": [
-        ('https', r'https://(?P<committer>.*?):(?P<token>.*?)@(?P<host>.*?)/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
-        ('https', r'http://(?P<host>.*?)/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
-        ('https', r'https://(?P<host>.*?)/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
-        ('ssh',   r'ssh://git@(?P<host>.*?)/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
-        ('ssh',   r'git@(?P<host>.*?):(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
-        ('ssh',   r'(?P<host>.*?)/(?P<user>.*?)/(?P<repo>.*?)(\.git)?/?(?P<branch>@.*?)?$'),
+        ('https', r'https://(?P<committer>.+?):(?P<token>.+?)@(?P<host>.+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
+        ('https', r'http://(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
+        ('https', r'https://(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
+        ('ssh',   r'ssh://git@(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
+        ('ssh',   r'git@(?P<host>[^/]+?):(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
+        ('ssh',   r'(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
     ],
 
 },
@@ -123,7 +123,7 @@ class GitUrl(object):
     GitUrl parse and format git urls
     """
 
-    def __init__(self, fields, rule_group):
+    def __init__(self, fields, rule_group, matching_pattern):
         """
         Create a GitUrl object.
 
@@ -134,10 +134,13 @@ class GitUrl(object):
 
             rule_group(dict): one of the predefined rule group this git-url
                     matched and is also used to output plain text url.
+
+            matching_pattern(str): the url pattern defined in rule_group that matches this url.
         """
 
         self.fields = fields
         self.rule_group = rule_group
+        self.matching_pattern = matching_pattern
 
     def fmt(self, scheme=None):
         """
@@ -211,7 +214,7 @@ class GitUrl(object):
                         if v is not None:
                             d[var_name] = v
 
-                return cls(d, g)
+                return cls(d, g, p)
 
         raise ValueError(
             'unknown url: {url};'.format(

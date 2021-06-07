@@ -137,6 +137,12 @@ class TestGitUrl(unittest.TestCase):
                  'https://myhost.com/openacid/slim.git',
                  'https://myhost.com/openacid/slim.git',
                 ),
+
+                ('git@gitee.com:drdrxp/bed.git',
+                 'git@gitee.com:drdrxp/bed.git',
+                 'https://gitee.com/drdrxp/bed.git',
+                 'git@gitee.com:drdrxp/bed.git',
+                )
         )
 
         for inp, wantssh, wanthttps, want_default in cases:
@@ -201,6 +207,20 @@ class TestGitUrl(unittest.TestCase):
             got = GitUrl.parse(inp)
             self.assertEqual(want_scheme, got.fields['scheme'])
 
+    def test_giturl_parse_invalid(self):
+        cases = (
+                #  simplified form
+                '/foo/bar/github.com/openacid/slim',
+        )
+
+        for inp in cases:
+
+            dd(inp)
+            with self.assertRaises(ValueError):
+                got = GitUrl.parse(inp)
+                dd(got.fields)
+                dd(got.rule_group)
+                dd(got.matching_pattern)
 
     def test_giturl_parse_token_from_env(self):
         cases = (
