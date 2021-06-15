@@ -190,25 +190,25 @@ class TestGitTree(BaseTest):
 
         tree = g.tree_of('master')
 
-        lines = g.tree_items(tree)
+        lines = g.tree_raw_items(tree)
         self.assertEqual([
             '100644 blob 15d2fff1101916d7212371fea0f3a82bda750f6c\t.gift',
             '100644 blob a668431ae444a5b68953dc61b4b3c30e066535a2\timsuperman'
         ], lines)
 
-        lines = g.tree_items(tree, with_size=True)
+        lines = g.tree_raw_items(tree, with_size=True)
         self.assertEqual([
             '100644 blob 15d2fff1101916d7212371fea0f3a82bda750f6c     163\t.gift',
             '100644 blob a668431ae444a5b68953dc61b4b3c30e066535a2       9\timsuperman'
         ], lines)
 
-        lines = g.tree_items(tree, name_only=True)
+        lines = g.tree_raw_items(tree, name_only=True)
         self.assertEqual([
             '.gift',
             'imsuperman'
         ], lines)
 
-        lines = g.tree_items(tree, name_only=True, with_size=True)
+        lines = g.tree_raw_items(tree, name_only=True, with_size=True)
         self.assertEqual([
             '.gift',
             'imsuperman'
@@ -218,7 +218,7 @@ class TestGitTree(BaseTest):
         g = Git(GitOpt(), cwd=superp)
 
         tree = g.tree_of('master')
-        lines = g.tree_items(tree, with_size=True)
+        lines = g.tree_raw_items(tree, with_size=True)
 
         got = g.parse_tree_item(lines[0])
         self.assertEqual({
@@ -233,13 +233,13 @@ class TestGitTree(BaseTest):
         g = Git(GitOpt(), cwd=superp)
 
         tree = g.tree_of('master')
-        lines = g.tree_items(tree)
+        lines = g.tree_raw_items(tree)
 
         itm = g.parse_tree_item(lines[0])
         obj = itm['object']
 
         treeish = g.tree_new(lines, 'foo', obj, mode='100755')
-        got = g.tree_items(treeish)
+        got = g.tree_raw_items(treeish)
 
         self.assertEqual([
             '100644 blob 15d2fff1101916d7212371fea0f3a82bda750f6c\t.gift',
@@ -335,7 +335,7 @@ class TestGitTreeItem(BaseTest):
         g = Git(GitOpt(), cwd=superp)
 
         tree = g.tree_of('master')
-        lines = g.tree_items(tree, with_size=True)
+        lines = g.tree_raw_items(tree, with_size=True)
         itm = g.parse_tree_item(lines[0])
         obj = itm['object']
 

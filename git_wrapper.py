@@ -73,7 +73,7 @@ class Git(object):
     def tree_of(self, commit, flag=''):
         return self.cmdf("rev-parse", commit + "^{tree}", flag=flag + 'n0')
 
-    def tree_items(self, treeish, name_only=False, with_size=False, flag='x'):
+    def tree_raw_items(self, treeish, name_only=False, with_size=False, flag='x'):
         args = []
         if name_only:
             args.append("--name-only")
@@ -86,7 +86,7 @@ class Git(object):
 
         sep = os.path.sep
 
-        itms = self.tree_items(cur_tree)
+        itms = self.tree_raw_items(cur_tree)
 
         if sep not in path:
             return self.tree_new(itms, path, treeish, flag='x')
@@ -108,7 +108,7 @@ class Git(object):
         return self.tree_new(itms, p0, newsubtree, flag='x')
 
     def tree_find_item(self, treeish, fn=None, typ=None):
-        for itm in self.tree_items(treeish):
+        for itm in self.tree_raw_items(treeish):
             itm = self.parse_tree_item(itm)
             if fn is not None and itm["fn"] != fn:
                 continue
