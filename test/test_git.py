@@ -265,10 +265,24 @@ class TestGitTree(BaseTest):
         tree = g.tree_of('master')
         lines = g.tree_items(tree)
 
+        treeish = g.tree_new(lines)
+        got = g.tree_items(treeish)
+
+        self.assertEqual([
+            '100644 blob 15d2fff1101916d7212371fea0f3a82bda750f6c\t.gift',
+            '100644 blob a668431ae444a5b68953dc61b4b3c30e066535a2\timsuperman',
+        ], got)
+
+    def test_tree_new_replace(self):
+        g = Git(GitOpt(), cwd=superp)
+
+        tree = g.tree_of('master')
+        lines = g.tree_items(tree)
+
         itm = g.parse_tree_item(lines[0])
         obj = itm['object']
 
-        treeish = g.tree_new(lines, 'foo', obj, mode='100755')
+        treeish = g.tree_new_replace(lines, 'foo', obj, mode='100755')
         got = g.tree_items(treeish)
 
         self.assertEqual([

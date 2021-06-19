@@ -109,7 +109,7 @@ class Git(object):
         itms = self.tree_items(cur_tree)
 
         if sep not in path:
-            return self.tree_new(itms, path, treeish, flag='x')
+            return self.tree_new_replace(itms, path, treeish, flag='x')
 
         # a/b/c -> a, b/c
         p0, left = path.split(sep, 1)
@@ -119,13 +119,13 @@ class Git(object):
 
             newsubtree = treeish
             for p in reversed(left.split(sep)):
-                newsubtree = self.tree_new([], p, newsubtree, flag='x')
+                newsubtree = self.tree_new_replace([], p, newsubtree, flag='x')
         else:
 
             subtree = p0item["object"]
             newsubtree = self.tree_add_obj(subtree, left, treeish)
 
-        return self.tree_new(itms, p0, newsubtree, flag='x')
+        return self.tree_new_replace(itms, p0, newsubtree, flag='x')
 
     def tree_find_item(self, treeish, fn=None, typ=None):
         for itm in self.tree_items(treeish):
@@ -163,7 +163,12 @@ class Git(object):
 
         return rst
 
-    def tree_new(self, itms, name, obj, mode=None, flag='x'):
+    def tree_new(self, itms, flag='x'):
+
+        treeish = self.cmdf("mktree", input="\n".join(itms), flag=flag + 'n0')
+        return treeish
+
+    def tree_new_replace(self, itms, name, obj, mode=None, flag='x'):
 
         new_items = self.treeitems_replace_item(itms, name, obj, mode=mode)
 
