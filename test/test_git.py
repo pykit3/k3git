@@ -1,22 +1,17 @@
 import os
-import unittest
 import shutil
+import unittest
 
 import k3ut
-from k3git import GitOpt
-from k3git import Git
-
-
 from k3fs import fread
 from k3fs import fwrite
-
+from k3git import Git
+from k3git import GitOpt
+from k3handy import CalledProcessError
 from k3handy.cmd import cmd0
 from k3handy.cmd import cmdf
-from k3handy.cmd import cmdx
 from k3handy.cmd import cmdout
-from k3handy import CalledProcessError
-
-
+from k3handy.cmd import cmdx
 from k3handy.path import pjoin
 
 dd = k3ut.dd
@@ -123,7 +118,7 @@ class TestGitBranch(BaseTest):
         cases = [
             ('master', 'origin'),
             ('dev', 'upstream'),
-            ('not_a_branch', None), 
+            ('not_a_branch', None),
         ]
 
         for branch, remote in cases:
@@ -184,6 +179,31 @@ class TestGitBlob(BaseTest):
 
 
 class TestGitTree(BaseTest):
+
+    def test_tree_commit(self):
+        g = Git(GitOpt(), cwd=superp)
+
+        # get the content of parent of master
+        # Thus the changes looks like reverting the changes in master.
+        tree = g.tree_of('master~')
+        dd("tree:", tree)
+
+        commit = g.tree_commit(tree, "test_tree_commit", [g.rev_of('master')])
+        dd("commit:", commit)
+
+        got = cmdout(origit, 'log', commit, '-n2', '--stat', '--format="%s"', cwd=superp)
+        dd(got)
+
+        self.assertEqual([
+            '"test_tree_commit"',
+            '',
+            ' imsuperman | 1 -',
+            ' 1 file changed, 1 deletion(-)',
+            '"add super"',
+            '',
+            ' imsuperman | 1 +',
+            ' 1 file changed, 1 insertion(+)'
+        ], got)
 
     def test_tree_items(self):
         g = Git(GitOpt(), cwd=superp)
@@ -248,7 +268,6 @@ class TestGitTree(BaseTest):
         ], got)
 
     def test_add_tree(self):
-
         # TODO opt
         g = Git(GitOpt(), cwd=superp)
 
@@ -356,7 +375,6 @@ class TestGitOut(BaseTest):
 
 
 def _clean_case():
-
     force_remove(pjoin(this_base, "testdata", "super", ".git"))
     cmdx(origit, "reset", "testdata", cwd=this_base)
     cmdx(origit, "checkout", "testdata", cwd=this_base)
@@ -364,7 +382,6 @@ def _clean_case():
 
 
 def force_remove(fn):
-
     try:
         shutil.rmtree(fn)
     except BaseException:

@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import os
 import logging
-
-from k3str import to_utf8
-from k3handy import pabs
+import os
 
 from k3handy import cmdf
+from k3handy import pabs
+from k3str import to_utf8
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +69,20 @@ class Git(object):
 
     def tree_of(self, commit, flag=''):
         return self.cmdf("rev-parse", commit + "^{tree}", flag=flag + 'n0')
+
+    def tree_commit(self, treeish, commit_message, parent_commits, flag='x'):
+
+        """
+        Create a commit of content ``treeish``, ``commit_message``, and add all
+        commit hashes in ``parent_commits`` as its parents.
+        """
+
+        parent_args = []
+        for c in parent_commits:
+            parent_args.extend(['-p', c])
+
+        return self.cmdf('commit-tree', treeish, *parent_args,
+                         input=commit_message, flag=flag + 'n0')
 
     def tree_items(self, treeish, name_only=False, with_size=False, flag='x'):
         args = []
@@ -151,7 +164,7 @@ class Git(object):
     def _treeitems_replace_item(self, itms, name, obj, mode=None):
 
         new_items = [x for x in itms
-                    if self.parse_tree_item(x)["fn"] != name]
+                     if self.parse_tree_item(x)["fn"] != name]
 
         if obj is not None:
             itm = self.treeitem_new(name, obj, mode=mode)
