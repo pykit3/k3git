@@ -44,6 +44,14 @@ class Git(object):
                          'branch.{}.remote'.format(branch),
                          flag=flag + 'n0')
 
+    def branch_set(self, branch, rev, flag='x'):
+        """
+        Set branch ref to specified ``rev``.
+        """
+
+        self.cmdf('update-ref', 'refs/heads/{}'.format(branch), rev, flag=flag)
+
+
     # head
 
     def head_branch(self, flag=''):
@@ -55,6 +63,7 @@ class Git(object):
     # remote
 
     def remote_get(self, name, flag=''):
+        # TODO: by default all func should raise
         return self.cmdf("remote", "get-url", name, flag=flag + 'n0')
 
     def remote_add(self, name, url, flag='x', **options):

@@ -125,6 +125,16 @@ class TestGitBranch(BaseTest):
             got = g.branch_default_remote(branch)
             self.assertEqual(remote, got)
 
+    def test_branch_set(self):
+        g = Git(GitOpt(), cwd=superp)
+
+        # parent of master
+        parent = g.rev_of('master~')
+
+        g.branch_set('master', 'master~')
+
+        self.assertEqual(parent, g.rev_of('master'))
+
 
 class TestGitRev(BaseTest):
 

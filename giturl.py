@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import re
 import os
+import re
 
 #  https://stackoverflow.com/questions/31801271/what-are-the-supported-git-url-formats
 #  I found the list below. It is not complete since
@@ -82,13 +82,14 @@ rule_groups = [{
     },
     "patterns": [
         # github.com/openacid/slim.git
-        ('ssh',  r'github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
+        ('ssh', r'github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
         # git@github.com:openacid/slim.git
         ('ssh', r'git@github.com:(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
         # ssh://git@github.com/openacid/openacid.github.io
         ('ssh', r'ssh://git@github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
         # https://committer:token@github.com/openacid/openacid.github.io.git
-        ('https', r'https://(?P<committer>.+?):(?P<token>.+?)@github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
+        ('https',
+         r'https://(?P<committer>.+?):(?P<token>.+?)@github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
         # http://github.com/openacid/openacid.github.io.git
         ('https', r'http://github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
         # https://github.com/openacid/openacid.github.io.git
@@ -106,12 +107,13 @@ rule_groups = [{
         "https_token": 'https://{committer}:{token}@{host}/{user}/{repo}.git',
     },
     "patterns": [
-        ('https', r'https://(?P<committer>.+?):(?P<token>.+?)@(?P<host>.+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
+        ('https',
+         r'https://(?P<committer>.+?):(?P<token>.+?)@(?P<host>.+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
         ('https', r'http://(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
         ('https', r'https://(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
-        ('ssh',   r'ssh://git@(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
-        ('ssh',   r'git@(?P<host>[^/]+?):(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
-        ('ssh',   r'(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
+        ('ssh', r'ssh://git@(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
+        ('ssh', r'git@(?P<host>[^/]+?):(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
+        ('ssh', r'(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
     ],
 
 },
@@ -173,7 +175,7 @@ class GitUrl(object):
         elif scheme == 'ssh':
             fmt = self.rule_group['fmt']['ssh']
         else:
-            raise ValueError("invalid scheme: "+scheme)
+            raise ValueError("invalid scheme: " + scheme)
 
         return fmt.format(**self.fields)
 
@@ -219,5 +221,5 @@ class GitUrl(object):
         raise ValueError(
             'unknown url: {url};'.format(
                 url=url,
-                )
+            )
         )
