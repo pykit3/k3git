@@ -244,13 +244,13 @@ class TestGitTree(BaseTest):
             'imsuperman'
         ], lines)
 
-    def test_parse_tree_item(self):
+    def test_treeitem_parse(self):
         g = Git(GitOpt(), cwd=superp)
 
         tree = g.tree_of('master')
         lines = g.tree_items(tree, with_size=True)
 
-        got = g.parse_tree_item(lines[0])
+        got = g.treeitem_parse(lines[0])
         self.assertEqual({
             'fn': '.gift',
             'mode': '100644',
@@ -279,7 +279,7 @@ class TestGitTree(BaseTest):
         tree = g.tree_of('master')
         lines = g.tree_items(tree)
 
-        itm = g.parse_tree_item(lines[0])
+        itm = g.treeitem_parse(lines[0])
         obj = itm['object']
 
         treeish = g.tree_new_replace(lines, 'foo', obj, mode='100755')
@@ -379,7 +379,7 @@ class TestGitTreeItem(BaseTest):
 
         tree = g.tree_of('master')
         lines = g.tree_items(tree, with_size=True)
-        itm = g.parse_tree_item(lines[0])
+        itm = g.treeitem_parse(lines[0])
         obj = itm['object']
 
         got = g.treeitem_new("foo", obj)

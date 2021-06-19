@@ -129,7 +129,7 @@ class Git(object):
 
     def tree_find_item(self, treeish, fn=None, typ=None):
         for itm in self.tree_items(treeish):
-            itm = self.parse_tree_item(itm)
+            itm = self.treeitem_parse(itm)
             if fn is not None and itm["fn"] != fn:
                 continue
             if typ is not None and itm["type"] != typ:
@@ -138,7 +138,7 @@ class Git(object):
             return itm
         return None
 
-    def parse_tree_item(self, line):
+    def treeitem_parse(self, line):
 
         # git-ls-tree output:
         #     <mode> SP <type> SP <object> TAB <file>
@@ -178,7 +178,7 @@ class Git(object):
     def treeitems_replace_item(self, itms, name, obj, mode=None):
 
         new_items = [x for x in itms
-                     if self.parse_tree_item(x)["fn"] != name]
+                     if self.treeitem_parse(x)["fn"] != name]
 
         if obj is not None:
             itm = self.treeitem_new(name, obj, mode=mode)
