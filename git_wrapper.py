@@ -165,12 +165,12 @@ class Git(object):
 
     def tree_new(self, itms, name, obj, mode=None, flag='x'):
 
-        new_items = self._treeitems_replace_item(itms, name, obj, mode=mode)
+        new_items = self.treeitems_replace_item(itms, name, obj, mode=mode)
 
         new_treeish = self.cmdf("mktree", input="\n".join(new_items), flag=flag + 'n0')
         return new_treeish
 
-    def _treeitems_replace_item(self, itms, name, obj, mode=None):
+    def treeitems_replace_item(self, itms, name, obj, mode=None):
 
         new_items = [x for x in itms
                      if self.parse_tree_item(x)["fn"] != name]
