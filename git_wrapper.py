@@ -4,7 +4,6 @@
 import os
 import logging
 
-
 from k3str import to_utf8
 from k3handy import pabs
 
@@ -43,8 +42,8 @@ class Git(object):
         Returns the default remote name of a branch.
         """
         return self.cmdf('config', '--get',
-                    'branch.{}.remote'.format(branch),
-                    flag=flag+'n0')
+                         'branch.{}.remote'.format(branch),
+                         flag=flag + 'n0')
 
     # head
 
@@ -52,8 +51,7 @@ class Git(object):
         """
         Returns the branch HEAD pointing to.
         """
-        return self.cmdf('symbolic-ref', '--short', 'HEAD', flag=flag+'n0')
-
+        return self.cmdf('symbolic-ref', '--short', 'HEAD', flag=flag + 'n0')
 
     # remote
 
@@ -73,7 +71,7 @@ class Git(object):
     def tree_of(self, commit, flag=''):
         return self.cmdf("rev-parse", commit + "^{tree}", flag=flag + 'n0')
 
-    def tree_raw_items(self, treeish, name_only=False, with_size=False, flag='x'):
+    def tree_items(self, treeish, name_only=False, with_size=False, flag='x'):
         args = []
         if name_only:
             args.append("--name-only")
@@ -86,7 +84,7 @@ class Git(object):
 
         sep = os.path.sep
 
-        itms = self.tree_raw_items(cur_tree)
+        itms = self.tree_items(cur_tree)
 
         if sep not in path:
             return self.tree_new(itms, path, treeish, flag='x')
@@ -108,7 +106,7 @@ class Git(object):
         return self.tree_new(itms, p0, newsubtree, flag='x')
 
     def tree_find_item(self, treeish, fn=None, typ=None):
-        for itm in self.tree_raw_items(treeish):
+        for itm in self.tree_items(treeish):
             itm = self.parse_tree_item(itm)
             if fn is not None and itm["fn"] != fn:
                 continue
@@ -145,14 +143,21 @@ class Git(object):
 
     def tree_new(self, itms, name, obj, mode=None, flag='x'):
 
-        newitems = [x for x in itms
+        new_items = self._treeitems_replace_item(itms, name, obj, mode=mode)
+
+        new_treeish = self.cmdf("mktree", input="\n".join(new_items), flag=flag + 'n0')
+        return new_treeish
+
+    def _treeitems_replace_item(self, itms, name, obj, mode=None):
+
+        new_items = [x for x in itms
                     if self.parse_tree_item(x)["fn"] != name]
 
-        itm = self.treeitem_new(name, obj, mode=mode)
+        if obj is not None:
+            itm = self.treeitem_new(name, obj, mode=mode)
+            new_items.append(itm)
 
-        newitems.append(itm)
-        new_treeish = self.cmdf("mktree", input="\n".join(newitems), flag=flag + 'n0')
-        return new_treeish
+        return new_items
 
     # treeitem
 
