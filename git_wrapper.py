@@ -34,6 +34,19 @@ class Git(object):
     def fetch(self, name, flag=''):
         self.cmdf("fetch", name, flag=flag)
 
+    # worktree
+
+    def worktree_is_clean(self, flag=''):
+        """
+        Return whether worktree is clean
+        """
+        # git bug: 
+        # Without running 'git status' first, "diff-index" in our test does not
+        # pass
+        self.cmdf("status", flag='')
+        code, _out, _err = self.cmdf("diff-index", "--quiet", "HEAD", "--", flag=flag)
+        return code == 0
+
     # branch
 
     def branch_default_remote(self, branch, flag=''):
@@ -42,6 +55,17 @@ class Git(object):
         """
         return self.cmdf('config', '--get',
                          'branch.{}.remote'.format(branch),
+                         flag=flag + 'n0')
+
+    def branch_default_upstream(self, branch, flag=''):
+        """
+        Returns the default upstream name of a branch,
+        i.e., the default upstream for master is origin/master.
+        """
+        return self.cmdf('rev-parse',
+                         '--abbrev-ref',
+                         '--symbolic-full-name',
+                         branch +'@{upstream}', 
                          flag=flag + 'n0')
 
     def branch_set(self, branch, rev, flag='x'):

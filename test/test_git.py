@@ -104,6 +104,24 @@ class TestGitHead(BaseTest):
         g.checkout('master')
 
 
+class TestGitWorktree(BaseTest):
+
+    def test_worktree_is_clean(self):
+        # branch_test_git_p is a git-dir with one commit::
+        # * 1d5ae3d (HEAD, origin/master, master) A  a
+
+        # write a ".git" file to specify the git-dir for the containing
+        # git-work-tree.
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+
+        self.assertTrue(g.worktree_is_clean())
+
+        fwrite(branch_test_worktree_p, "a", "foobarfoobar")
+        self.assertFalse(g.worktree_is_clean())
+
+
 class TestGitBranch(BaseTest):
 
     def test_branch_default_remote(self):
@@ -123,6 +141,25 @@ class TestGitBranch(BaseTest):
 
         for branch, remote in cases:
             got = g.branch_default_remote(branch)
+            self.assertEqual(remote, got)
+
+    def test_branch_default_upstream(self):
+        # branch_test_git_p is a git-dir with one commit::
+        # * 1d5ae3d (HEAD, origin/master, master) A  a
+
+        # write a ".git" file to specify the git-dir for the containing
+        # git-work-tree.
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+        cases = [
+            ('master', 'origin/master'),
+            ('dev', 'upstream/master'),
+            ('not_a_branch', None),
+        ]
+
+        for branch, remote in cases:
+            got = g.branch_default_upstream(branch)
             self.assertEqual(remote, got)
 
     def test_branch_set(self):
