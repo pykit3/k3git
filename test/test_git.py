@@ -123,13 +123,13 @@ class TestGitWorktree(BaseTest):
 
 
 class TestGitBranch(BaseTest):
+    # branch_test_git_p is a git-dir with one commit::
+    # * 1d5ae3d (HEAD, origin/master, master) A  a
+
+    # write a ".git" file to specify the git-dir for the containing
+    # git-work-tree.
 
     def test_branch_default_remote(self):
-        # branch_test_git_p is a git-dir with one commit::
-        # * 1d5ae3d (HEAD, origin/master, master) A  a
-
-        # write a ".git" file to specify the git-dir for the containing
-        # git-work-tree.
         fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
 
         g = Git(GitOpt(), cwd=branch_test_worktree_p)
@@ -144,11 +144,6 @@ class TestGitBranch(BaseTest):
             self.assertEqual(remote, got)
 
     def test_branch_default_upstream(self):
-        # branch_test_git_p is a git-dir with one commit::
-        # * 1d5ae3d (HEAD, origin/master, master) A  a
-
-        # write a ".git" file to specify the git-dir for the containing
-        # git-work-tree.
         fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
 
         g = Git(GitOpt(), cwd=branch_test_worktree_p)
@@ -171,6 +166,43 @@ class TestGitBranch(BaseTest):
         g.branch_set('master', 'master~')
 
         self.assertEqual(parent, g.rev_of('master'))
+
+    def test_branch_common_base(self):
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+        cases = [
+            #  (['b2'], (['1315e30ec849dbbe67df3282139c0e0d3fdca606'], ['d1ec6549cffc507a2d41d5e363dcbd23754377c7'])),
+            #  (['b2', 'base'], (['1315e30ec849dbbe67df3282139c0e0d3fdca606'], ['d1ec6549cffc507a2d41d5e363dcbd23754377c7'])),
+            #  (['b2', 'master'], (['1315e30ec849dbbe67df3282139c0e0d3fdca606'], [])),
+
+            (['b2', 'base'], '3d7f4245f05db036309e9f74430d5479263637ad'),
+            (['b2', 'master'], '3d7f4245f05db036309e9f74430d5479263637ad'),
+        ]
+
+        for args, want in cases:
+            got = g.branch_common_base(*args)
+            self.assertEqual(want, got)
+
+    def test_branch_divergency(self):
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+        cases = [
+            (['b2'], ('3d7f4245f05db036309e9f74430d5479263637ad',
+                      [ '1315e30ec849dbbe67df3282139c0e0d3fdca606' ],
+                      [ 'd1ec6549cffc507a2d41d5e363dcbd23754377c7'])),
+            (['b2', 'base'], ('3d7f4245f05db036309e9f74430d5479263637ad',
+                              ['1315e30ec849dbbe67df3282139c0e0d3fdca606'],
+                              ['d1ec6549cffc507a2d41d5e363dcbd23754377c7'])),
+            (['b2', 'master'], ('3d7f4245f05db036309e9f74430d5479263637ad',
+                                ['1315e30ec849dbbe67df3282139c0e0d3fdca606'],
+                                [])),
+        ]
+
+        for args, want in cases:
+            got = g.branch_divergency(*args)
+            self.assertEqual(want, got)
 
 
 class TestGitRev(BaseTest):

@@ -17,3 +17,6 @@
 [branch "dev"]
 	remote = upstream
 	merge = refs/heads/master
+[branch "b2"]
+	remote = .
+	merge = refs/heads/base

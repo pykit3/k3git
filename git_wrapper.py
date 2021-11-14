@@ -75,6 +75,30 @@ class Git(object):
 
         self.cmdf('update-ref', 'refs/heads/{}'.format(branch), rev, flag=flag)
 
+    def branch_common_base(self, branch, other, flag=''):
+        """
+        Find the common base of two branches
+        """
+
+        return self.cmdf('merge-base', branch, other, flag=flag+'0')
+
+    def branch_divergency(self, branch, upstream=None, flag=''):
+        """
+        Return the divergency between a branch and another.
+        If upstream is None, the default upstream is used.
+
+        Return: (list, list) commits from common base to branch and commits from common base to upstream.
+        """
+
+        if upstream is None:
+            upstream = self.branch_default_upstream(branch, flag='x')
+
+        base = self.branch_common_base(branch, upstream, flag='x')
+
+        b_logs = self.cmdf("log", "--format=%H", base + '..' + branch, flag='xo')
+        u_logs = self.cmdf("log", "--format=%H", base + '..' + upstream, flag='xo')
+
+        return (base, b_logs, u_logs)
 
     # head
 
