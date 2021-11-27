@@ -34,6 +34,15 @@ class Git(object):
     def fetch(self, name, flag=''):
         self.cmdf("fetch", name, flag=flag)
 
+    def reset_to_commit(self, mode, target=None, flag='x'):
+        """
+        mode is one of `soft`, `mixed`, `hard`, `merge`, `keep`.
+        """
+        if target is None:
+            target = 'HEAD'
+
+        self.cmdf('reset', '--' + mode, target, flag=flag)
+
     # worktree
 
     def worktree_is_clean(self, flag=''):

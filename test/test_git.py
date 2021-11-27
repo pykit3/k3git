@@ -80,6 +80,54 @@ class TestGitHighlevel(BaseTest):
 
         self.assertEqual('6bf37e52cbafcf55ff4710bb2b63309b55bf8e54', hsh)
 
+    def test_reset_to_commit(self):
+        #  * 1315e30 (b2) add b2
+        #  | * d1ec654 (base) add base
+        #  |/
+        #  * 3d7f424 (HEAD -> master, upstream/master, origin/master, dev) a
+
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+
+        g.cmdf("checkout", 'b2')
+
+        # build index
+        fwrite(branch_test_worktree_p, "x", "x")
+        g.cmdf('add', 'x')
+        fwrite(branch_test_worktree_p, "y", "y")
+        g.cmdf('add', 'y')
+
+        # dirty worktree
+        fwrite(branch_test_worktree_p, "x", "xx")
+
+        # soft default to HEAD, nothing changed
+
+        g.reset_to_commit('soft')
+
+        out = g.cmdf('diff', '--name-only', '--relative', flag='xo')
+        self.assertEqual([ 'x', ], out, "dirty worktree")
+
+        out = g.cmdf('diff', '--name-only', '--relative', 'HEAD', flag='xo')
+        self.assertEqual([ 'x', 'y' ], out, "compare with HEAD")
+
+        # soft to master
+
+        g.reset_to_commit('soft', 'master')
+
+        out = g.cmdf('diff', '--name-only', '--relative', flag='xo')
+        self.assertEqual([ 'x', ], out, "dirty worktree")
+
+        out = g.cmdf('diff', '--name-only', '--relative', 'HEAD', flag='xo')
+        self.assertEqual([ 'b2', 'x', 'y', ], out, "compare with HEAD")
+
+        # hard to master
+
+        g.reset_to_commit('hard', 'master')
+
+        out = g.cmdf('diff', '--name-only', '--relative', 'HEAD', flag='xo')
+        self.assertEqual([], out, "compare with HEAD")
+
 
 class TestGitHead(BaseTest):
 
