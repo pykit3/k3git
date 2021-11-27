@@ -29,10 +29,10 @@ class Git(object):
     # high level API
 
     def checkout(self, branch, flag='x'):
-        self.cmdf("checkout", branch, flag=flag)
+        return self.cmdf("checkout", branch, flag=flag)
 
     def fetch(self, name, flag=''):
-        self.cmdf("fetch", name, flag=flag)
+        return self.cmdf("fetch", name, flag=flag)
 
     def reset_to_commit(self, mode, target=None, flag='x'):
         """
@@ -41,7 +41,7 @@ class Git(object):
         if target is None:
             target = 'HEAD'
 
-        self.cmdf('reset', '--' + mode, target, flag=flag)
+        return self.cmdf('reset', '--' + mode, target, flag=flag)
 
     # worktree
 
