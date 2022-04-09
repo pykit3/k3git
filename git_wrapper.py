@@ -5,6 +5,7 @@ import logging
 import os
 
 from k3handy import cmdf
+from k3handy import parse_flag
 from k3handy import pabs
 from k3str import to_utf8
 
@@ -83,6 +84,22 @@ class Git(object):
         """
 
         self.cmdf('update-ref', 'refs/heads/{}'.format(branch), rev, flag=flag)
+
+    def branch_list(self, scope='local', flag=''):
+        """
+        List branches
+        """
+
+        refs = self.ref_list(flag=parse_flag(flag))
+
+        res = []
+        if scope == 'local':
+            pref = 'refs/heads/'
+            for ref in refs.keys():
+                if ref.startswith(pref):
+                    res.append(ref[len(pref):])
+
+        return sorted(res);
 
     def branch_common_base(self, branch, other, flag=''):
         """
@@ -264,6 +281,32 @@ class Git(object):
                               name=name
                               )
         return itm
+
+    # ref
+    
+    def ref_list(self, flag=''):
+        """
+        List ref
+
+        Return: a map of ref name such as ``refs/heads/master`` to commit hash
+        """
+
+        #  git show-ref
+        #  46f1130da3d74edf5ef0961718c9afc47ad28a44 refs/heads/master
+        #  104403398142d4643669be8099697a6b51bbbc62 refs/remotes/origin/HEAD
+        #  46f1130da3d74edf5ef0961718c9afc47ad28a44 refs/remotes/origin/fixup
+        #  104403398142d4643669be8099697a6b51bbbc62 refs/remotes/origin/master
+        #  4a90cdaec2e7bb945c9a49148919db0a6ffa059d refs/tags/v0.1.0
+        #  b1af433f3291ff137679ad3889be5d72377f0cb6 refs/tags/v0.1.10
+        hash_and_refs = self.cmdf('show-ref', flag=parse_flag('xo', flag))
+
+        res = {}
+        for line in hash_and_refs:
+            hsh, ref = line.strip().split()
+
+            res[ref] = hsh
+
+        return res
 
     # rev
 

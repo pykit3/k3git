@@ -215,6 +215,27 @@ class TestGitBranch(BaseTest):
 
         self.assertEqual(parent, g.rev_of('master'))
 
+    def test_branch_list(self):
+        #  * 1315e30 (b2) add b2
+        #  | * d1ec654 (base) add base
+        #  |/
+        #  * 3d7f424 (HEAD -> master, upstream/master, origin/master, dev) a
+
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+
+        got = g.branch_list()
+        self.assertEqual(
+            [
+                "b2",
+                "base",
+                "dev",
+                "master",
+            ], got
+        )
+
+
     def test_branch_common_base(self):
         fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
 
@@ -251,6 +272,32 @@ class TestGitBranch(BaseTest):
         for args, want in cases:
             got = g.branch_divergency(*args)
             self.assertEqual(want, got)
+
+
+class TestGitRef(BaseTest):
+
+    def test_ref_list(self):
+        #  * 1315e30 (b2) add b2
+        #  | * d1ec654 (base) add base
+        #  |/
+        #  * 3d7f424 (HEAD -> master, upstream/master, origin/master, dev) a
+
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+
+        got = g.ref_list()
+        print(got)
+        self.assertEqual(
+            {'refs/heads/b2': '1315e30ec849dbbe67df3282139c0e0d3fdca606',
+             'refs/heads/base': 'd1ec6549cffc507a2d41d5e363dcbd23754377c7',
+             'refs/heads/dev': '3d7f4245f05db036309e9f74430d5479263637ad',
+             'refs/heads/master': '3d7f4245f05db036309e9f74430d5479263637ad',
+             'refs/remotes/origin/master': '3d7f4245f05db036309e9f74430d5479263637ad',
+             'refs/remotes/upstream/master': '3d7f4245f05db036309e9f74430d5479263637ad',
+            },
+                got
+        )
 
 
 class TestGitRev(BaseTest):
