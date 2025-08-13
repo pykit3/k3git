@@ -13,8 +13,19 @@ logger = logging.getLogger(__name__)
 
 
 class Git(object):
+    """Git command wrapper with configurable paths and options."""
 
     def __init__(self, opt, gitpath=None, gitdir=None, working_dir=None, cwd=None, ctxmsg=None):
+        """Initialize Git wrapper.
+
+        Args:
+            opt: Command options object with clone() method
+            gitpath: Path to git executable
+            gitdir: Git directory path (overrides -C option)
+            working_dir: Working tree path (overrides -C option)
+            cwd: Current working directory for commands
+            ctxmsg: Context message prefix for output
+        """
         self.opt = opt.clone()
         # gitdir and working_dir is specified and do not consider '-C' option
         if gitdir is not None:
@@ -30,14 +41,19 @@ class Git(object):
     # high level API
 
     def checkout(self, branch, flag='x'):
+        """Checkout specified branch."""
         return self.cmdf("checkout", branch, flag=flag)
 
     def fetch(self, name, flag=''):
+        """Fetch from remote repository."""
         return self.cmdf("fetch", name, flag=flag)
 
     def reset_to_commit(self, mode, target=None, flag='x'):
-        """
-        mode is one of `soft`, `mixed`, `hard`, `merge`, `keep`.
+        """Reset HEAD to specified commit.
+
+        Args:
+            mode: Reset mode (soft, mixed, hard, merge, keep)
+            target: Target commit (defaults to HEAD)
         """
         if target is None:
             target = 'HEAD'
@@ -47,10 +63,8 @@ class Git(object):
     # worktree
 
     def worktree_is_clean(self, flag=''):
-        """
-        Return whether worktree is clean
-        """
-        # git bug: 
+        """Check if working tree has no uncommitted changes."""
+        # git bug:
         # Without running 'git status' first, "diff-index" in our test does not
         # pass
         self.cmdf("status", flag='')
@@ -60,35 +74,26 @@ class Git(object):
     # branch
 
     def branch_default_remote(self, branch, flag=''):
-        """
-        Returns the default remote name of a branch.
-        """
+        """Get default remote name for branch."""
         return self.cmdf('config', '--get',
                          'branch.{}.remote'.format(branch),
                          flag=flag + 'n0')
 
     def branch_default_upstream(self, branch, flag=''):
-        """
-        Returns the default upstream name of a branch,
-        i.e., the default upstream for master is origin/master.
-        """
+        """Get upstream branch name (e.g., origin/master for master)."""
         return self.cmdf('rev-parse',
                          '--abbrev-ref',
                          '--symbolic-full-name',
-                         branch +'@{upstream}', 
+                         branch +'@{upstream}',
                          flag=flag + 'n0')
 
     def branch_set(self, branch, rev, flag='x'):
-        """
-        Set branch ref to specified ``rev``.
-        """
+        """Set branch reference to specified revision."""
 
         self.cmdf('update-ref', 'refs/heads/{}'.format(branch), rev, flag=flag)
 
     def branch_list(self, scope='local', flag=''):
-        """
-        List branches
-        """
+        """List branches in specified scope."""
 
         refs = self.ref_list(flag=parse_flag(flag))
 
@@ -102,18 +107,15 @@ class Git(object):
         return sorted(res);
 
     def branch_common_base(self, branch, other, flag=''):
-        """
-        Find the common base of two branches
-        """
+        """Find merge base commit of two branches."""
 
         return self.cmdf('merge-base', branch, other, flag=flag+'0')
 
     def branch_divergency(self, branch, upstream=None, flag=''):
-        """
-        Return the divergency between a branch and another.
-        If upstream is None, the default upstream is used.
+        """Get divergency between branch and upstream.
 
-        Return: (list, list) commits from common base to branch and commits from common base to upstream.
+        Returns:
+            tuple: (base_commit, branch_commits, upstream_commits)
         """
 
         if upstream is None:
@@ -129,36 +131,33 @@ class Git(object):
     # head
 
     def head_branch(self, flag=''):
-        """
-        Returns the branch HEAD pointing to.
-        """
+        """Get current branch name."""
         return self.cmdf('symbolic-ref', '--short', 'HEAD', flag=flag + 'n0')
 
     # remote
 
     def remote_get(self, name, flag=''):
-        # TODO: by default all func should raise
+        """Get URL for remote."""
         return self.cmdf("remote", "get-url", name, flag=flag + 'n0')
 
     def remote_add(self, name, url, flag='x', **options):
+        """Add remote with name and URL."""
         self.cmdf("remote", "add", name, url, **options, flag=flag)
 
     # blob
 
     def blob_new(self, f, flag=''):
+        """Create new blob from file."""
         return self.cmdf("hash-object", "-w", f, flag=flag + 'n0')
 
     #  tree
 
     def tree_of(self, commit, flag=''):
+        """Get tree hash of commit."""
         return self.cmdf("rev-parse", commit + "^{tree}", flag=flag + 'n0')
 
     def tree_commit(self, treeish, commit_message, parent_commits, flag='x'):
-
-        """
-        Create a commit of content ``treeish``, ``commit_message``, and add all
-        commit hashes in ``parent_commits`` as its parents.
-        """
+        """Create commit from tree with message and parents."""
 
         parent_args = []
         for c in parent_commits:
@@ -168,6 +167,7 @@ class Git(object):
                          input=commit_message, flag=flag + 'n0')
 
     def tree_items(self, treeish, name_only=False, with_size=False, flag='x'):
+        """List items in tree."""
         args = []
         if name_only:
             args.append("--name-only")
@@ -177,6 +177,7 @@ class Git(object):
         return self.cmdf("ls-tree", treeish, *args, flag=flag + 'no')
 
     def tree_add_obj(self, cur_tree, path, treeish):
+        """Add object to tree at specified path."""
 
         sep = os.path.sep
 
@@ -202,6 +203,7 @@ class Git(object):
         return self.tree_new_replace(itms, p0, newsubtree, flag='x')
 
     def tree_find_item(self, treeish, fn=None, typ=None):
+        """Find item in tree by filename and/or type."""
         for itm in self.tree_items(treeish):
             itm = self.treeitem_parse(itm)
             if fn is not None and itm["fn"] != fn:
@@ -213,6 +215,12 @@ class Git(object):
         return None
 
     def treeitem_parse(self, line):
+        """Parse git ls-tree output line into dict.
+
+        Example output formats:
+            100644 blob a668431ae444a5b68953dc61b4b3c30e066535a2    imsuperman
+            040000 tree a668431ae444a5b68953dc61b4b3c30e066535a2    foo
+        """
 
         # git-ls-tree output:
         #     <mode> SP <type> SP <object> TAB <file>
@@ -238,11 +246,13 @@ class Git(object):
         return rst
 
     def tree_new(self, itms, flag='x'):
+        """Create new tree from items."""
 
         treeish = self.cmdf("mktree", input="\n".join(itms), flag=flag + 'n0')
         return treeish
 
     def tree_new_replace(self, itms, name, obj, mode=None, flag='x'):
+        """Create new tree replacing/adding item."""
 
         new_items = self.treeitems_replace_item(itms, name, obj, mode=mode)
 
@@ -250,6 +260,7 @@ class Git(object):
         return new_treeish
 
     def treeitems_replace_item(self, itms, name, obj, mode=None):
+        """Replace item in tree items list."""
 
         new_items = [x for x in itms
                      if self.treeitem_parse(x)["fn"] != name]
@@ -263,6 +274,7 @@ class Git(object):
     # treeitem
 
     def treeitem_new(self, name, obj, mode=None):
+        """Create new tree item string."""
 
         typ = self.obj_type(obj, flag='x')
         item_fmt = "{mode} {typ} {object}\t{name}"
@@ -283,12 +295,16 @@ class Git(object):
         return itm
 
     # ref
-    
-    def ref_list(self, flag=''):
-        """
-        List ref
 
-        Return: a map of ref name such as ``refs/heads/master`` to commit hash
+    def ref_list(self, flag=''):
+        """List all refs.
+
+        Returns:
+            dict: Map of ref names(such as ``refs/heads/master``) to commit hashes
+
+        Example output:
+            46f1130da3d74edf5ef0961718c9afc47ad28a44 refs/heads/master
+            104403398142d4643669be8099697a6b51bbbc62 refs/remotes/origin/HEAD
         """
 
         #  git show-ref
@@ -311,26 +327,25 @@ class Git(object):
     # rev
 
     def rev_of(self, name, flag=''):
-        """
-        Get the revision(sha256) of an object.
+        """Get SHA hash of object.
 
         Args:
-
-            name(str): could be short hash, full length hash, ref name or branch.
-
-            flag(str): flag='x' to raise if return code is not 0. flag='' to return None.
+            name: Hash, ref name, or branch name
+            flag: 'x' to raise on error, '' to return None
 
         Returns:
-            str: sha256 in lower-case hex. If no such object is found, it returns None.
+            str: SHA hash or None if not found
         """
         return self.cmdf("rev-parse", "--verify", "--quiet", name, flag=flag + 'n0')
 
     def obj_type(self, obj, flag=''):
+        """Get object type (blob, tree, commit, tag)."""
         return self.cmdf("cat-file", "-t", obj, flag=flag + 'n0')
 
     # wrapper of cli
 
     def _opt(self, **kwargs):
+        """Build command options dict."""
         opt = {}
         if self.cwd is not None:
             opt["cwd"] = self.cwd
@@ -338,13 +353,15 @@ class Git(object):
         return opt
 
     def _args(self):
+        """Get git command arguments."""
         return self.opt.to_args()
 
     def cmdf(self, *args, flag='', **kwargs):
+        """Execute git command with configured options."""
         return cmdf(self.gitpath, *self._args(), *args, flag=flag, **self._opt(**kwargs))
 
     def out(self, fd, *msg):
-
+        """Write formatted output to file descriptor."""
         if self.ctxmsg is not None:
             os.write(fd, to_utf8(self.ctxmsg) + b": ")
 
