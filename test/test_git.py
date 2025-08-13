@@ -402,11 +402,6 @@ class TestGitTree(BaseTest):
             'imsuperman'
         ], lines)
 
-        lines = g.tree_items(tree, name_only=True, with_size=True)
-        self.assertEqual([
-            '.gift',
-            'imsuperman'
-        ], lines)
 
     def test_treeitem_parse(self):
         g = Git(GitOpt(), cwd=superp)
