@@ -1,7 +1,7 @@
 # k3git
 
+[![Action-CI](https://github.com/pykit3/k3git/actions/workflows/python-package.yml/badge.svg)](https://github.com/pykit3/k3git/actions/workflows/python-package.yml)
 [![Build Status](https://travis-ci.com/pykit3/k3git.svg?branch=master)](https://travis-ci.com/pykit3/k3git)
-![Python package](https://github.com/pykit3/k3git/workflows/Python%20package/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/k3git/badge/?version=stable)](https://k3git.readthedocs.io/en/stable/?badge=stable)
 [![Package](https://img.shields.io/pypi/pyversions/k3git)](https://pypi.org/project/k3git)
 

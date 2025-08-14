@@ -63,19 +63,13 @@ html_theme = "alabaster"
 html_static_path = []
 
 
-def sphinx_confs():
+def load_parent_package():
     """
-    Load repo dir as a package
+    Load the parent directory as a package module.
 
-    `readthedocs` use branch name as dir!
-    Thus the following does not work::
-
-        import pk3proc
+    Returns:
+        tuple: (package_name, package_module)
     """
-
-    print("sys.path:", sys.path)
-
-    # Add the parent directory to sys.path temporarily to allow proper imports
     import os
 
     parent_dir = os.path.dirname(os.path.dirname(__file__))
@@ -102,6 +96,23 @@ def sphinx_confs():
     pkg = importlib.util.module_from_spec(spec)
     sys.modules[package_name] = pkg  # Add to sys.modules so relative imports work
     spec.loader.exec_module(pkg)
+
+    return package_name, pkg
+
+
+def sphinx_confs():
+    """
+    Load repo dir as a package
+
+    `readthedocs` use branch name as dir!
+    Thus the following does not work::
+
+        import pk3proc
+    """
+
+    print("sys.path:", sys.path)
+
+    package_name, pkg = load_parent_package()
 
     return (
         pkg.__name__,

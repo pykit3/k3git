@@ -2,12 +2,13 @@
 # coding: utf-8
 
 import doctest
-import imp
 import os
 import sys
 
 import jinja2
 import yaml
+
+from __init__ import load_parent_package
 
 # xxx/_building/build_readme.py
 this_base = os.path.dirname(__file__)
@@ -19,8 +20,8 @@ j2vars = {}
 sys.path.insert(0, os.path.abspath(".."))
 
 # load package name from __init__.py
-pkg = imp.load_source("_foo", "__init__.py")
-j2vars["name"] = pkg.__name__
+package_name, pkg = load_parent_package()
+j2vars["name"] = package_name
 
 
 def get_gh_config():
