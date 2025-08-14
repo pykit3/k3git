@@ -20,3 +20,6 @@
 [branch "b2"]
 	remote = .
 	merge = refs/heads/base
+[user]
+	email = you@example.com
+	name = Your Name

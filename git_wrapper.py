@@ -58,7 +58,7 @@ class Git(object):
 
         Examples:
             git.add('file.txt')          # git add file.txt
-            git.add('*.py', 'docs/')     # git add *.py docs/
+            git.add('\\*.py', 'docs/')     # git add \\*.py docs/
             git.add(update=True)         # git add -u (updates all tracked files)
             git.add('src/', update=True) # git add -u src/
 
