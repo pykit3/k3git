@@ -48,6 +48,33 @@ class Git(object):
         """Fetch from remote repository."""
         return self.cmdf("fetch", name, flag=flag)
 
+    def add(self, *files, update=False, flag='x'):
+        """Add files to staging area.
+
+        Args:
+            *files: Files or patterns to add (required unless update=True)
+            update: If True, add -u flag to update tracked files only
+            flag: Command execution flags
+
+        Examples:
+            git.add('file.txt')          # git add file.txt
+            git.add('*.py', 'docs/')     # git add *.py docs/
+            git.add(update=True)         # git add -u (updates all tracked files)
+            git.add('src/', update=True) # git add -u src/
+
+        Raises:
+            ValueError: If no files provided and update=False
+        """
+        if not files and not update:
+            raise ValueError("Must specify files to add or use update=True")
+
+        args = []
+        if update:
+            args.append('-u')
+        args.extend(files)
+
+        return self.cmdf("add", *args, flag=flag)
+
     def reset_to_commit(self, mode, target=None, flag='x'):
         """Reset HEAD to specified commit.
 

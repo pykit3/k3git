@@ -548,6 +548,43 @@ class TestGitTreeItem(BaseTest):
         self.assertEqual('100755 blob 15d2fff1101916d7212371fea0f3a82bda750f6c\tfoo', got)
 
 
+class TestGitAdd(BaseTest):
+
+    def test_add(self):
+        # Test that add requires files when update=False
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+
+        with self.assertRaises(ValueError):
+            g.add()
+
+        # Create test files
+        fwrite(branch_test_worktree_p, "test1.txt", "test content 1")
+        fwrite(branch_test_worktree_p, "test2.txt", "test content 2")
+
+        # Test adding specific files
+        g.add("test1.txt")
+        out = g.cmdf("status", "--short", flag='xo')
+        self.assertIn("A  test1.txt", '\n'.join(out))
+
+        # Test adding multiple files
+        g.add("test2.txt", "test1.txt")
+        out = g.cmdf("status", "--short", flag='xo')
+        self.assertIn("A  test2.txt", '\n'.join(out))
+
+        # Commit to have tracked files for update test
+        g.cmdf("commit", "-m", "Add test files", flag='x')
+
+        # Modify files
+        fwrite(branch_test_worktree_p, "test1.txt", "modified content 1")
+        fwrite(branch_test_worktree_p, "test2.txt", "modified content 2")
+
+        # Test update=True (should work without files)
+        g.add(update=True)
+        out = g.cmdf("status", "--short", flag='xo')
+        self.assertIn("M  test1.txt", '\n'.join(out))
+        self.assertIn("M  test2.txt", '\n'.join(out))
+
+
 class TestGitOut(BaseTest):
 
     def test_out(self):
