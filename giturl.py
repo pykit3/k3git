@@ -66,57 +66,90 @@ import re
 #  https://(?P<host>.*?)/(?P<user>.*?)/(?P<repo>.*?)(\.git)?(/)?(?P<branch>@.*?)?$
 
 
-rule_groups = [{
-    "defaults": {
-        "host": "github.com",
+rule_groups = [
+    {
+        "defaults": {
+            "host": "github.com",
+        },
+        "env": {
+            "committer": "GITHUB_USERNAME",
+            "token": "GITHUB_TOKEN",
+        },
+        "provider": "github.com",
+        "fmt": {
+            "ssh": "git@{host}:{user}/{repo}.git",
+            "https": "https://{host}/{user}/{repo}.git",
+            "https_token": "https://{committer}:{token}@{host}/{user}/{repo}.git",
+        },
+        "patterns": [
+            # github.com/openacid/slim.git
+            (
+                "ssh",
+                r"github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$",
+            ),
+            # git@github.com:openacid/slim.git
+            (
+                "ssh",
+                r"git@github.com:(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$",
+            ),
+            # ssh://git@github.com/openacid/openacid.github.io
+            (
+                "ssh",
+                r"ssh://git@github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$",
+            ),
+            # https://committer:token@github.com/openacid/openacid.github.io.git
+            (
+                "https",
+                r"https://(?P<committer>.+?):(?P<token>.+?)@github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$",
+            ),
+            # http://github.com/openacid/openacid.github.io.git
+            (
+                "https",
+                r"http://github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$",
+            ),
+            # https://github.com/openacid/openacid.github.io.git
+            (
+                "https",
+                r"https://github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$",
+            ),
+        ],
     },
-    "env": {
-        "committer": "GITHUB_USERNAME",
-        "token": "GITHUB_TOKEN",
+    {
+        "defaults": {},
+        "env": {},
+        "provider": "*",
+        "fmt": {
+            "ssh": "git@{host}:{user}/{repo}.git",
+            "https": "https://{host}/{user}/{repo}.git",
+            "https_token": "https://{committer}:{token}@{host}/{user}/{repo}.git",
+        },
+        "patterns": [
+            (
+                "https",
+                r"https://(?P<committer>.+?):(?P<token>.+?)@(?P<host>.+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$",
+            ),
+            (
+                "https",
+                r"http://(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$",
+            ),
+            (
+                "https",
+                r"https://(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$",
+            ),
+            (
+                "ssh",
+                r"ssh://git@(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$",
+            ),
+            (
+                "ssh",
+                r"git@(?P<host>[^/]+?):(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$",
+            ),
+            (
+                "ssh",
+                r"(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$",
+            ),
+        ],
     },
-    "provider": "github.com",
-    "fmt": {
-        "ssh": 'git@{host}:{user}/{repo}.git',
-        "https": 'https://{host}/{user}/{repo}.git',
-        "https_token": 'https://{committer}:{token}@{host}/{user}/{repo}.git',
-    },
-    "patterns": [
-        # github.com/openacid/slim.git
-        ('ssh', r'github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
-        # git@github.com:openacid/slim.git
-        ('ssh', r'git@github.com:(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
-        # ssh://git@github.com/openacid/openacid.github.io
-        ('ssh', r'ssh://git@github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
-        # https://committer:token@github.com/openacid/openacid.github.io.git
-        ('https',
-         r'https://(?P<committer>.+?):(?P<token>.+?)@github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
-        # http://github.com/openacid/openacid.github.io.git
-        ('https', r'http://github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
-        # https://github.com/openacid/openacid.github.io.git
-        ('https', r'https://github.com/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
-    ],
-}, {
-    "defaults": {
-    },
-    "env": {
-    },
-    "provider": "*",
-    "fmt": {
-        "ssh": 'git@{host}:{user}/{repo}.git',
-        "https": 'https://{host}/{user}/{repo}.git',
-        "https_token": 'https://{committer}:{token}@{host}/{user}/{repo}.git',
-    },
-    "patterns": [
-        ('https',
-         r'https://(?P<committer>.+?):(?P<token>.+?)@(?P<host>.+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
-        ('https', r'http://(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
-        ('https', r'https://(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
-        ('ssh', r'ssh://git@(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
-        ('ssh', r'git@(?P<host>[^/]+?):(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
-        ('ssh', r'(?P<host>[^/]+?)/(?P<user>.+?)/(?P<repo>.+?)(\.git)?/?(?P<branch>@.+?)?$'),
-    ],
-
-},
 ]
 
 
@@ -165,15 +198,15 @@ class GitUrl(object):
         """
 
         if scheme is None:
-            scheme = self.fields['scheme']
+            scheme = self.fields["scheme"]
 
-        if scheme == 'https':
-            if 'token' in self.fields:
-                fmt = self.rule_group['fmt']['https_token']
+        if scheme == "https":
+            if "token" in self.fields:
+                fmt = self.rule_group["fmt"]["https_token"]
             else:
-                fmt = self.rule_group['fmt']['https']
-        elif scheme == 'ssh':
-            fmt = self.rule_group['fmt']['ssh']
+                fmt = self.rule_group["fmt"]["https"]
+        elif scheme == "ssh":
+            fmt = self.rule_group["fmt"]["ssh"]
         else:
             raise ValueError("invalid scheme: " + scheme)
 
@@ -199,18 +232,18 @@ class GitUrl(object):
         """
 
         for g in rule_groups:
-            for (scheme, p) in g['patterns']:
+            for scheme, p in g["patterns"]:
                 match = re.match(p, url)
                 if not match:
                     continue
 
                 d = match.groupdict()
-                d.update(g['defaults'])
+                d.update(g["defaults"])
 
-                d['scheme'] = scheme
+                d["scheme"] = scheme
 
                 #  extend vars from env
-                for var_name, env_name in g['env'].items():
+                for var_name, env_name in g["env"].items():
                     if var_name not in d:
                         v = os.environ.get(env_name)
                         if v is not None:
@@ -219,7 +252,7 @@ class GitUrl(object):
                 return cls(d, g, p)
 
         raise ValueError(
-            'unknown url: {url};'.format(
+            "unknown url: {url};".format(
                 url=url,
             )
         )

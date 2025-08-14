@@ -19,6 +19,7 @@ from .giturl import GitUrl
 from .git_wrapper import Git
 
 __all__ = [
-    'Git',
-    'GitOpt',
+    "Git",
+    "GitOpt",
+    "GitUrl",
 ]
