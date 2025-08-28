@@ -646,6 +646,28 @@ class TestGitAdd(BaseTest):
         self.assertIn("M  test1.txt", "\n".join(out))
         self.assertIn("M  test2.txt", "\n".join(out))
 
+    def test_commit(self):
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+
+        # Create and add test file
+        fwrite(branch_test_worktree_p, "commit_test.txt", "test content")
+        g.add("commit_test.txt")
+
+        # Test commit with message
+        commit_hash = g.commit("Add commit test file")
+
+        # Verify commit was created
+        self.assertTrue(commit_hash)
+        self.assertEqual(len(commit_hash), 40)  # SHA-1 hash length
+
+        # Verify commit message
+        out = g.cmdf("log", "-1", "--pretty=format:%s", flag="xo")
+        self.assertEqual(["Add commit test file"], out)
+
+        # Verify the commit hash matches HEAD
+        head_hash = g.cmdf("rev-parse", "HEAD", flag="xn0")
+        self.assertEqual(commit_hash, head_hash)
+
 
 class TestGitOut(BaseTest):
     def test_out(self):

@@ -3,6 +3,7 @@
 
 import logging
 import os
+from typing import Dict, List, Optional, Tuple, Any
 
 from k3handy import cmdf
 from k3handy import parse_flag
@@ -16,8 +17,14 @@ class Git(object):
     """Git command wrapper with configurable paths and options."""
 
     def __init__(
-        self, opt, gitpath=None, gitdir=None, working_dir=None, cwd=None, ctxmsg=None
-    ):
+        self,
+        opt: Any,
+        gitpath: Optional[str] = None,
+        gitdir: Optional[str] = None,
+        working_dir: Optional[str] = None,
+        cwd: Optional[str] = None,
+        ctxmsg: Optional[str] = None,
+    ) -> None:
         """Initialize Git wrapper.
 
         Args:
@@ -42,15 +49,15 @@ class Git(object):
 
     # high level API
 
-    def checkout(self, branch, flag="x"):
+    def checkout(self, branch: str, flag: str = "x") -> Any:
         """Checkout specified branch."""
         return self.cmdf("checkout", branch, flag=flag)
 
-    def fetch(self, name, flag=""):
+    def fetch(self, name: str, flag: str = "") -> Any:
         """Fetch from remote repository."""
         return self.cmdf("fetch", name, flag=flag)
 
-    def add(self, *files, update=False, flag="x"):
+    def add(self, *files: str, update: bool = False, flag: str = "x") -> Any:
         """Add files to staging area.
 
         Args:
@@ -77,7 +84,22 @@ class Git(object):
 
         return self.cmdf("add", *args, flag=flag)
 
-    def reset_to_commit(self, mode, target=None, flag="x"):
+    def commit(self, message, flag="x"):
+        """Commit staged changes with message.
+
+        Args:
+            message: Commit message (required)
+            flag: Command execution flags
+
+        Returns:
+            str: Commit hash of new commit
+        """
+        self.cmdf("commit", "-m", message, flag=flag)
+        return self.cmdf("rev-parse", "HEAD", flag=flag + "n0")
+
+    def reset_to_commit(
+        self, mode: str, target: Optional[str] = None, flag: str = "x"
+    ) -> Any:
         """Reset HEAD to specified commit.
 
         Args:
@@ -91,7 +113,7 @@ class Git(object):
 
     # worktree
 
-    def worktree_is_clean(self, flag=""):
+    def worktree_is_clean(self, flag: str = "") -> bool:
         """Check if working tree has no uncommitted changes."""
         # git bug:
         # Without running 'git status' first, "diff-index" in our test does not
@@ -102,13 +124,13 @@ class Git(object):
 
     # branch
 
-    def branch_default_remote(self, branch, flag=""):
+    def branch_default_remote(self, branch: str, flag: str = "") -> Any:
         """Get default remote name for branch."""
         return self.cmdf(
             "config", "--get", "branch.{}.remote".format(branch), flag=flag + "n0"
         )
 
-    def branch_default_upstream(self, branch, flag=""):
+    def branch_default_upstream(self, branch: str, flag: str = "") -> Any:
         """Get upstream branch name (e.g., origin/master for master)."""
         return self.cmdf(
             "rev-parse",
@@ -118,12 +140,12 @@ class Git(object):
             flag=flag + "n0",
         )
 
-    def branch_set(self, branch, rev, flag="x"):
+    def branch_set(self, branch: str, rev: str, flag: str = "x") -> None:
         """Set branch reference to specified revision."""
 
         self.cmdf("update-ref", "refs/heads/{}".format(branch), rev, flag=flag)
 
-    def branch_list(self, scope="local", flag=""):
+    def branch_list(self, scope: str = "local", flag: str = "") -> List[str]:
         """List branches in specified scope."""
 
         refs = self.ref_list(flag=parse_flag(flag))
@@ -137,12 +159,14 @@ class Git(object):
 
         return sorted(res)
 
-    def branch_common_base(self, branch, other, flag=""):
+    def branch_common_base(self, branch: str, other: str, flag: str = "") -> Any:
         """Find merge base commit of two branches."""
 
         return self.cmdf("merge-base", branch, other, flag=flag + "0")
 
-    def branch_divergency(self, branch, upstream=None, flag=""):
+    def branch_divergency(
+        self, branch: str, upstream: Optional[str] = None, flag: str = ""
+    ) -> Tuple[Any, Any, Any]:
         """Get divergency between branch and upstream.
 
         Returns:
@@ -161,33 +185,39 @@ class Git(object):
 
     # head
 
-    def head_branch(self, flag=""):
+    def head_branch(self, flag: str = "") -> Any:
         """Get current branch name."""
         return self.cmdf("symbolic-ref", "--short", "HEAD", flag=flag + "n0")
 
     # remote
 
-    def remote_get(self, name, flag=""):
+    def remote_get(self, name: str, flag: str = "") -> Any:
         """Get URL for remote."""
         return self.cmdf("remote", "get-url", name, flag=flag + "n0")
 
-    def remote_add(self, name, url, flag="x", **options):
+    def remote_add(self, name: str, url: str, flag: str = "x", **options: Any) -> None:
         """Add remote with name and URL."""
         self.cmdf("remote", "add", name, url, **options, flag=flag)
 
     # blob
 
-    def blob_new(self, f, flag=""):
+    def blob_new(self, f: str, flag: str = "") -> Any:
         """Create new blob from file."""
         return self.cmdf("hash-object", "-w", f, flag=flag + "n0")
 
     #  tree
 
-    def tree_of(self, commit, flag=""):
+    def tree_of(self, commit: str, flag: str = "") -> Any:
         """Get tree hash of commit."""
         return self.cmdf("rev-parse", commit + "^{tree}", flag=flag + "n0")
 
-    def tree_commit(self, treeish, commit_message, parent_commits, flag="x"):
+    def tree_commit(
+        self,
+        treeish: str,
+        commit_message: str,
+        parent_commits: List[str],
+        flag: str = "x",
+    ) -> Any:
         """Create commit from tree with message and parents."""
 
         parent_args = []
@@ -198,7 +228,13 @@ class Git(object):
             "commit-tree", treeish, *parent_args, input=commit_message, flag=flag + "n0"
         )
 
-    def tree_items(self, treeish, name_only=False, with_size=False, flag="x"):
+    def tree_items(
+        self,
+        treeish: str,
+        name_only: bool = False,
+        with_size: bool = False,
+        flag: str = "x",
+    ) -> Any:
         """List items in tree."""
         args = []
         if name_only:
@@ -208,7 +244,7 @@ class Git(object):
             args.append("--long")
         return self.cmdf("ls-tree", treeish, *args, flag=flag + "no")
 
-    def tree_add_obj(self, cur_tree, path, treeish):
+    def tree_add_obj(self, cur_tree: str, path: str, treeish: str) -> Any:
         """Add object to tree at specified path."""
 
         sep = os.path.sep
@@ -232,7 +268,9 @@ class Git(object):
 
         return self.tree_new_replace(itms, p0, newsubtree, flag="x")
 
-    def tree_find_item(self, treeish, fn=None, typ=None):
+    def tree_find_item(
+        self, treeish: str, fn: Optional[str] = None, typ: Optional[str] = None
+    ) -> Optional[Dict[str, str]]:
         """Find item in tree by filename and/or type."""
         for itm in self.tree_items(treeish):
             itm = self.treeitem_parse(itm)
@@ -244,7 +282,7 @@ class Git(object):
             return itm
         return None
 
-    def treeitem_parse(self, line):
+    def treeitem_parse(self, line: str) -> Dict[str, str]:
         """Parse git ls-tree output line into dict.
 
         Example output formats:
@@ -275,13 +313,20 @@ class Git(object):
 
         return rst
 
-    def tree_new(self, itms, flag="x"):
+    def tree_new(self, itms: List[str], flag: str = "x") -> Any:
         """Create new tree from items."""
 
         treeish = self.cmdf("mktree", input="\n".join(itms), flag=flag + "n0")
         return treeish
 
-    def tree_new_replace(self, itms, name, obj, mode=None, flag="x"):
+    def tree_new_replace(
+        self,
+        itms: List[str],
+        name: str,
+        obj: str,
+        mode: Optional[str] = None,
+        flag: str = "x",
+    ) -> Any:
         """Create new tree replacing/adding item."""
 
         new_items = self.treeitems_replace_item(itms, name, obj, mode=mode)
@@ -289,7 +334,9 @@ class Git(object):
         new_treeish = self.cmdf("mktree", input="\n".join(new_items), flag=flag + "n0")
         return new_treeish
 
-    def treeitems_replace_item(self, itms, name, obj, mode=None):
+    def treeitems_replace_item(
+        self, itms: List[str], name: str, obj: Optional[str], mode: Optional[str] = None
+    ) -> List[str]:
         """Replace item in tree items list."""
 
         new_items = [x for x in itms if self.treeitem_parse(x)["fn"] != name]
@@ -302,7 +349,7 @@ class Git(object):
 
     # treeitem
 
-    def treeitem_new(self, name, obj, mode=None):
+    def treeitem_new(self, name: str, obj: str, mode: Optional[str] = None) -> str:
         """Create new tree item string."""
 
         typ = self.obj_type(obj, flag="x")
@@ -321,7 +368,7 @@ class Git(object):
 
     # ref
 
-    def ref_list(self, flag=""):
+    def ref_list(self, flag: str = "") -> Dict[str, str]:
         """List all refs.
 
         Returns:
@@ -351,7 +398,7 @@ class Git(object):
 
     # rev
 
-    def rev_of(self, name, flag=""):
+    def rev_of(self, name: str, flag: str = "") -> Optional[str]:
         """Get SHA hash of object.
 
         Args:
@@ -363,13 +410,13 @@ class Git(object):
         """
         return self.cmdf("rev-parse", "--verify", "--quiet", name, flag=flag + "n0")
 
-    def obj_type(self, obj, flag=""):
+    def obj_type(self, obj: str, flag: str = "") -> Any:
         """Get object type (blob, tree, commit, tag)."""
         return self.cmdf("cat-file", "-t", obj, flag=flag + "n0")
 
     # wrapper of cli
 
-    def _opt(self, **kwargs):
+    def _opt(self, **kwargs: Any) -> Dict[str, Any]:
         """Build command options dict."""
         opt = {}
         if self.cwd is not None:
@@ -377,17 +424,17 @@ class Git(object):
         opt.update(kwargs)
         return opt
 
-    def _args(self):
+    def _args(self) -> List[str]:
         """Get git command arguments."""
         return self.opt.to_args()
 
-    def cmdf(self, *args, flag="", **kwargs):
+    def cmdf(self, *args: str, flag: str = "", **kwargs: Any) -> Any:
         """Execute git command with configured options."""
         return cmdf(
             self.gitpath, *self._args(), *args, flag=flag, **self._opt(**kwargs)
         )
 
-    def out(self, fd, *msg):
+    def out(self, fd: int, *msg: str) -> None:
         """Write formatted output to file descriptor."""
         if self.ctxmsg is not None:
             os.write(fd, to_utf8(self.ctxmsg) + b": ")
