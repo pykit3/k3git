@@ -598,6 +598,26 @@ class Git(object):
 
         return res
 
+    def ref_delete(self, ref: str, flag: str = "x") -> None:
+        """Delete a git reference.
+
+        Args:
+            ref: Reference to delete (e.g., 'refs/heads/branch', 'refs/tags/v1.0')
+            flag: Command execution flags
+
+        Examples:
+            >>> git.ref_delete('refs/heads/feature-branch')
+            >>> git.ref_delete('refs/tags/old-tag')
+
+        Raises:
+            ValueError: If ref is empty
+            CalledProcessError: If deletion fails
+        """
+        if not ref:
+            raise ValueError("ref cannot be empty")
+
+        self.cmdf("update-ref", "-d", ref, flag=flag)
+
     # rev
 
     def rev_of(self, name: str, flag: str = "") -> Optional[str]:

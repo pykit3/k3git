@@ -431,6 +431,28 @@ class TestGitRef(BaseTest):
             got,
         )
 
+    def test_ref_delete(self):
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+
+        # Empty ref validation
+        with self.assertRaises(ValueError):
+            g.ref_delete("")
+
+        # Create a test branch and delete it
+        g.branch_set("test-delete-branch", "master")
+        refs = g.ref_list()
+        self.assertIn("refs/heads/test-delete-branch", refs)
+
+        # Delete the branch reference
+        g.ref_delete("refs/heads/test-delete-branch")
+        refs = g.ref_list()
+        self.assertNotIn("refs/heads/test-delete-branch", refs)
+
+        # Deleting non-existent ref succeeds silently (git behavior)
+        g.ref_delete("refs/heads/nonexistent", flag="x")  # Should not raise
+
 
 class TestGitRev(BaseTest):
     def test_rev_of(self):
