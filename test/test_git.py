@@ -224,6 +224,29 @@ class TestGitWorktree(BaseTest):
         fwrite(branch_test_worktree_p, "a", "foobarfoobar")
         self.assertFalse(g.worktree_is_clean())
 
+    def test_worktree_staged_files(self):
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+
+        # No staged files initially
+        files = g.worktree_staged_files()
+        self.assertEqual([], files)
+
+        # Create and stage files
+        fwrite(branch_test_worktree_p, "test1.txt", "content1")
+        fwrite(branch_test_worktree_p, "test2.txt", "content2")
+        g.add("test1.txt", "test2.txt")
+
+        # Should return list of staged files
+        files = g.worktree_staged_files()
+        self.assertEqual(["test1.txt", "test2.txt"], sorted(files))
+
+        # Commit and verify no staged files
+        g.commit("test commit")
+        files = g.worktree_staged_files()
+        self.assertEqual([], files)
+
 
 class TestGitBranch(BaseTest):
     # branch_test_git_p is a git-dir with one commit::

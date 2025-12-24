@@ -165,6 +165,24 @@ class Git(object):
         code, _out, _err = self.cmdf("diff-index", "--quiet", "HEAD", "--", flag=flag)
         return code == 0
 
+    def worktree_staged_files(self, flag: str = "") -> List[str]:
+        """Get list of files with staged changes.
+
+        Args:
+            flag: Command execution flags
+
+        Returns:
+            list: Filenames of staged files (empty list if nothing staged)
+
+        Examples:
+            >>> git.add('file1.txt', 'file2.txt')
+            >>> git.worktree_staged_files()
+            ['file1.txt', 'file2.txt']
+            >>> git.worktree_staged_files()
+            []  # Nothing staged
+        """
+        return self.cmdf("diff", "--name-only", "--cached", flag=flag + "no")
+
     # branch
 
     def branch_default_remote(self, branch: str, flag: str = "") -> Any:
