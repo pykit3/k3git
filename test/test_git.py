@@ -735,6 +735,39 @@ class TestGitAdd(BaseTest):
         self.assertEqual(commit_hash, head_hash)
 
 
+class TestGitLog(BaseTest):
+    def test_log_date(self):
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+
+        # Success case - get date from HEAD
+        date = g.log_date("HEAD")
+        self.assertIsNotNone(date)
+        self.assertIsInstance(date, str)
+
+        # Success case - get date from master
+        date = g.log_date("master")
+        self.assertIsNotNone(date)
+
+        # Custom format - ISO 8601
+        date = g.log_date("HEAD", format="%ai")
+        self.assertIsNotNone(date)
+        self.assertIn("-", date)  # ISO format contains dashes
+
+        # Not found with flag='' - should return None
+        result = g.log_date("nonexistent", flag="")
+        self.assertIsNone(result)
+
+        # Not found with flag='x' - should raise
+        with self.assertRaises(CalledProcessError):
+            g.log_date("nonexistent", flag="x")
+
+        # Empty ref validation
+        with self.assertRaises(ValueError):
+            g.log_date("")
+
+
 class TestGitOut(BaseTest):
     def test_out(self):
         script = r"""import k3git; k3git.Git(k3git.GitOpt(), ctxmsg="foo").out(1, "bar", "wow")"""

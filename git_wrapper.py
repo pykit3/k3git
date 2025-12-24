@@ -475,6 +475,40 @@ class Git(object):
         """Get object type (blob, tree, commit, tag)."""
         return self.cmdf("cat-file", "-t", obj, flag=flag + "n0")
 
+    # log
+
+    def log_date(self, ref: str, format: str = "%ad", flag: str = "") -> Optional[str]:
+        """Get date from commit log.
+
+        Args:
+            ref: Commit reference (hash, branch, tag, etc.)
+            format: Date format string (default: %ad for author date)
+                    Common formats:
+                    - %ad: author date
+                    - %cd: committer date
+                    - %ai: author date (ISO 8601)
+                    - %ci: committer date (ISO 8601)
+            flag: Command execution flags
+
+        Returns:
+            str: Formatted date string, or None if ref not found
+
+        Examples:
+            >>> git.log_date('HEAD')
+            'Mon Aug 14 20:47:31 2023 +0800'
+            >>> git.log_date('master', format='%ai')
+            '2023-08-14 20:47:31 +0800'
+            >>> git.log_date('nonexistent')
+            None
+
+        Raises:
+            ValueError: If ref is empty string
+        """
+        if not ref:
+            raise ValueError("ref cannot be empty")
+
+        return self.cmdf("log", "-1", "--format=" + format, ref, flag=flag + "n0")
+
     # wrapper of cli
 
     def _opt(self, **kwargs: Any) -> Dict[str, Any]:
