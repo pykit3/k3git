@@ -260,6 +260,29 @@ class Git(object):
         """Add remote with name and URL."""
         self.cmdf("remote", "add", name, url, **options, flag=flag)
 
+    def remote_push(self, remote: str, branch: str, flag: str = "x") -> None:
+        """Push branch to remote.
+
+        Args:
+            remote: Remote name or URL
+            branch: Branch name to push
+            flag: Command execution flags
+
+        Examples:
+            >>> git.remote_push('origin', 'master')
+            >>> git.remote_push('backup', 'develop')
+
+        Raises:
+            ValueError: If remote or branch is empty
+            CalledProcessError: If push fails
+        """
+        if not remote:
+            raise ValueError("remote cannot be empty")
+        if not branch:
+            raise ValueError("branch cannot be empty")
+
+        self.cmdf("push", remote, branch, flag=flag)
+
     # blob
 
     def blob_new(self, f: str, flag: str = "") -> Any:

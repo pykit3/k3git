@@ -429,6 +429,22 @@ class TestGitRemote(BaseTest):
         t = g.remote_get("newremote")
         self.assertEqual("newremote-url", t)
 
+    def test_remote_push(self):
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+
+        # Empty remote validation
+        with self.assertRaises(ValueError):
+            g.remote_push("", "master")
+
+        # Empty branch validation
+        with self.assertRaises(ValueError):
+            g.remote_push("origin", "")
+
+        # Note: We can't test actual push without a writable remote
+        # The method is tested through parameter validation
+
 
 class TestGitBlob(BaseTest):
     def test_blob_new(self):
