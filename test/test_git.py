@@ -58,6 +58,28 @@ class TestGitInit(BaseTest):
         self.assertRaises(CalledProcessError, g.checkout, "foo")
 
 
+class TestGitRepo(BaseTest):
+    def test_repo_root(self):
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+
+        # Success case - should return absolute path to repo root
+        root = g.repo_root()
+        self.assertIsNotNone(root)
+        self.assertTrue(os.path.isabs(root))
+        self.assertTrue(os.path.exists(root))
+
+        # Not in git repo with flag='' - should return None
+        g_no_repo = Git(GitOpt(), cwd="/tmp")
+        result = g_no_repo.repo_root(flag="")
+        self.assertIsNone(result)
+
+        # Not in git repo with flag='x' - should raise
+        with self.assertRaises(CalledProcessError):
+            g_no_repo.repo_root(flag="x")
+
+
 class TestGitHighlevel(BaseTest):
     def test_checkout(self):
         g = Git(GitOpt(), cwd=superp)

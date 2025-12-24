@@ -47,6 +47,24 @@ class Git(object):
         self.gitpath = gitpath or "git"
         self.ctxmsg = ctxmsg
 
+    # repo
+
+    def repo_root(self, flag: str = "") -> Optional[str]:
+        """Get repository root directory path.
+
+        Args:
+            flag: Command execution flags
+
+        Returns:
+            str: Absolute path to repository root, or None if not in a git repo
+
+        Examples:
+            >>> git.repo_root()
+            '/Users/user/project'
+            >>> git.repo_root(flag='x')  # Raises if not in git repo
+        """
+        return self.cmdf("rev-parse", "--show-toplevel", flag=flag + "n0")
+
     # high level API
 
     def checkout(self, branch: str, flag: str = "x") -> Any:
