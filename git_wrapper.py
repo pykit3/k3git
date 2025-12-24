@@ -100,6 +100,40 @@ class Git(object):
         """Fetch from remote repository."""
         return self.cmdf("fetch", name, flag=flag)
 
+    def fetch_url(
+        self, url: str, refspec: str, no_tags: bool = True, flag: str = "x"
+    ) -> None:
+        """Fetch refspec from URL without adding remote.
+
+        Args:
+            url: Git repository URL
+            refspec: Refspec to fetch (e.g., 'refs/heads/master:refs/remotes/origin/master')
+            no_tags: If True, don't fetch tags (default: True)
+            flag: Command execution flags
+
+        Examples:
+            >>> git.fetch_url('https://github.com/user/repo.git',
+            ...               'refs/heads/main:refs/remotes/tmp/main')
+            >>> git.fetch_url('git@github.com:user/repo.git',
+            ...               '+refs/heads/*:refs/remotes/mirror/*',
+            ...               no_tags=False)
+
+        Raises:
+            ValueError: If url or refspec is empty
+            CalledProcessError: If fetch fails
+        """
+        if not url:
+            raise ValueError("url cannot be empty")
+        if not refspec:
+            raise ValueError("refspec cannot be empty")
+
+        args = ["fetch"]
+        if no_tags:
+            args.append("--no-tags")
+        args.extend([url, refspec])
+
+        self.cmdf(*args, flag=flag)
+
     def add(self, *files: str, update: bool = False, flag: str = "x") -> Any:
         """Add files to staging area.
 

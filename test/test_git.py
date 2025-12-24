@@ -117,6 +117,22 @@ class TestGitHighlevel(BaseTest):
 
         self.assertEqual("6bf37e52cbafcf55ff4710bb2b63309b55bf8e54", hsh)
 
+    def test_fetch_url(self):
+        g = Git(GitOpt(), cwd=superp)
+
+        # Empty url validation
+        with self.assertRaises(ValueError):
+            g.fetch_url("", "refs/heads/master:refs/remotes/test/master")
+
+        # Empty refspec validation
+        with self.assertRaises(ValueError):
+            g.fetch_url(wowgitp, "")
+
+        # Successful fetch from URL
+        g.fetch_url(wowgitp, "refs/heads/master:refs/remotes/test/master")
+        hsh = g.cmdf("log", "-n1", "--format=%H", "refs/remotes/test/master", flag="0")
+        self.assertEqual("6bf37e52cbafcf55ff4710bb2b63309b55bf8e54", hsh)
+
     def test_reset_to_commit(self):
         #  * 1315e30 (b2) add b2
         #  | * d1ec654 (base) add base
