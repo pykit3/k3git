@@ -264,6 +264,30 @@ class Git(object):
 
         self.cmdf("rebase", upstream, flag=flag)
 
+    def branch_merge_ff(self, upstream: Optional[str] = None, flag: str = "x") -> None:
+        """Fast-forward merge upstream into current branch.
+
+        Args:
+            upstream: Branch to merge (None = tracking branch)
+            flag: Command execution flags
+
+        Examples:
+            >>> git.branch_merge_ff('origin/master')
+            >>> git.branch_merge_ff()  # Merges tracking branch
+
+        Raises:
+            ValueError: If upstream is empty string
+            CalledProcessError: If fast-forward not possible or no tracking branch
+        """
+        if upstream == "":
+            raise ValueError("upstream cannot be empty string (use None for default)")
+
+        args = ["merge", "--no-edit", "--commit", "--ff-only"]
+        if upstream is not None:
+            args.append(upstream)
+
+        self.cmdf(*args, flag=flag)
+
     # head
 
     def head_branch(self, flag: str = "") -> Any:

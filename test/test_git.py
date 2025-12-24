@@ -377,6 +377,18 @@ class TestGitBranch(BaseTest):
         # Note: We can't test actual rebase without potentially creating conflicts
         # The method is tested through parameter validation
 
+    def test_branch_merge_ff(self):
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+
+        # Empty string upstream validation (distinguish from None)
+        with self.assertRaises(ValueError):
+            g.branch_merge_ff("")
+
+        # Note: We can't test actual merge without potentially creating conflicts
+        # The method is tested through parameter validation
+
 
 class TestGitRef(BaseTest):
     def test_ref_list(self):
