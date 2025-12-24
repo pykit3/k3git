@@ -65,6 +65,31 @@ class Git(object):
         """
         return self.cmdf("rev-parse", "--show-toplevel", flag=flag + "n0")
 
+    def repo_is_repository(self, path: Optional[str] = None) -> bool:
+        """Check if path is a git repository.
+
+        Args:
+            path: Directory path to check (None = current directory)
+
+        Returns:
+            bool: True if path contains .git directory or file
+
+        Examples:
+            >>> git.repo_is_repository('/path/to/repo')
+            True
+            >>> git.repo_is_repository('/path/to/non-repo')
+            False
+            >>> git.repo_is_repository()  # Check current directory
+            True
+        """
+        if path is None:
+            check_path = self.cwd if self.cwd is not None else os.getcwd()
+        else:
+            check_path = path
+
+        git_path = os.path.join(check_path, ".git")
+        return os.path.exists(git_path)
+
     # high level API
 
     def checkout(self, branch: str, flag: str = "x") -> Any:

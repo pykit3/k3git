@@ -79,6 +79,27 @@ class TestGitRepo(BaseTest):
         with self.assertRaises(CalledProcessError):
             g_no_repo.repo_root(flag="x")
 
+    def test_repo_is_repository(self):
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+
+        # Check with explicit path - should be True
+        result = g.repo_is_repository(branch_test_worktree_p)
+        self.assertTrue(result)
+
+        # Check current directory (cwd) - should be True
+        result = g.repo_is_repository()
+        self.assertTrue(result)
+
+        # Check non-repo directory - should be False
+        result = g.repo_is_repository("/tmp")
+        self.assertFalse(result)
+
+        # Check non-existent path - should be False
+        result = g.repo_is_repository("/nonexistent/path")
+        self.assertFalse(result)
+
 
 class TestGitHighlevel(BaseTest):
     def test_checkout(self):
