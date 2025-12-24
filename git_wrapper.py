@@ -361,6 +361,46 @@ class Git(object):
 
         self.cmdf("push", remote, branch, flag=flag)
 
+    def remote_push_all(self, branch: str, flag: str = "x") -> Dict[str, bool]:
+        """Push branch to all configured remotes.
+
+        Args:
+            branch: Branch name to push
+            flag: Command execution flags ('x' raises on ANY failure, '' continues on errors)
+
+        Returns:
+            dict: Map of remote name to success status (True/False)
+
+        Examples:
+            >>> git.remote_push_all('master')
+            {'origin': True, 'backup': True}
+            >>> git.remote_push_all('develop', flag='')  # Continue on errors
+            {'origin': True, 'backup': False}  # backup failed but didn't raise
+
+        Raises:
+            ValueError: If branch is empty
+            CalledProcessError: If flag='x' and any push fails
+        """
+        if not branch:
+            raise ValueError("branch cannot be empty")
+
+        # Get all remotes
+        from k3handy import CalledProcessError
+
+        remotes_output = self.cmdf("remote", flag="xo")
+        results = {}
+
+        for remote in remotes_output:
+            try:
+                self.remote_push(remote, branch, flag="x")
+                results[remote] = True
+            except CalledProcessError as e:
+                results[remote] = False
+                if "x" in flag:
+                    raise
+
+        return results
+
     # blob
 
     def blob_new(self, f: str, flag: str = "") -> Any:

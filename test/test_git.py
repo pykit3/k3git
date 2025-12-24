@@ -485,6 +485,27 @@ class TestGitRemote(BaseTest):
         # Note: We can't test actual push without a writable remote
         # The method is tested through parameter validation
 
+    def test_remote_push_all(self):
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+
+        # Empty branch validation
+        with self.assertRaises(ValueError):
+            g.remote_push_all("")
+
+        # Test with no remotes - should return empty dict
+        # First remove any existing remotes
+        remotes = g.cmdf("remote", flag="xo")
+        for remote in remotes:
+            g.cmdf("remote", "remove", remote, flag="x")
+
+        results = g.remote_push_all("master")
+        self.assertEqual({}, results)
+
+        # Note: We can't test actual push without writable remotes
+        # The method is tested through parameter validation and empty case
+
 
 class TestGitBlob(BaseTest):
     def test_blob_new(self):
