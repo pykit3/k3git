@@ -767,6 +767,50 @@ class TestGitLog(BaseTest):
         with self.assertRaises(ValueError):
             g.log_date("")
 
+    def test_log_grep(self):
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+
+        # Create commits with specific messages for testing
+        fwrite(branch_test_worktree_p, "file1.txt", "content1")
+        g.add("file1.txt")
+        g.commit("fix bug in parser")
+
+        fwrite(branch_test_worktree_p, "file2.txt", "content2")
+        g.add("file2.txt")
+        g.commit("add new feature")
+
+        # Search for pattern in commit messages
+        commits = g.log_grep("fix")
+        self.assertEqual(1, len(commits))
+
+        commits = g.log_grep("add")
+        self.assertEqual(1, len(commits))
+
+        # Search with max_count
+        commits = g.log_grep("add", max_count=1)
+        self.assertEqual(1, len(commits))
+
+        # Search for non-existent pattern - should return empty list
+        commits = g.log_grep("nonexistent")
+        self.assertEqual([], commits)
+
+        # Empty pattern validation
+        with self.assertRaises(ValueError):
+            g.log_grep("")
+
+        # Invalid grep_type validation
+        with self.assertRaises(ValueError):
+            g.log_grep("test", grep_type="invalid")
+
+        # Invalid max_count validation
+        with self.assertRaises(ValueError):
+            g.log_grep("test", max_count=0)
+
+        with self.assertRaises(ValueError):
+            g.log_grep("test", max_count=-1)
+
 
 class TestGitOut(BaseTest):
     def test_out(self):

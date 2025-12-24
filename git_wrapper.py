@@ -509,6 +509,49 @@ class Git(object):
 
         return self.cmdf("log", "-1", "--format=" + format, ref, flag=flag + "n0")
 
+    def log_grep(
+        self,
+        pattern: str,
+        grep_type: str = "grep",
+        max_count: Optional[int] = None,
+        flag: str = "",
+    ) -> List[str]:
+        """Find commits matching grep pattern.
+
+        Args:
+            pattern: Pattern to search for
+            grep_type: Type of grep ('grep' for message, 'G' for content, 'S' for pickaxe)
+            max_count: Limit number of results (None = unlimited)
+            flag: Command execution flags
+
+        Returns:
+            list: Commit hashes matching pattern (newest first), empty list if none found
+
+        Examples:
+            >>> git.log_grep('fix bug')  # Search commit messages
+            ['abc123...', 'def456...']
+            >>> git.log_grep('TODO', grep_type='G')  # Search file contents
+            ['ghi789...']
+            >>> git.log_grep('squash', max_count=1)  # Get latest matching commit
+            ['abc123...']
+
+        Raises:
+            ValueError: If pattern is empty or grep_type invalid or max_count < 1
+        """
+        if not pattern:
+            raise ValueError("pattern cannot be empty")
+
+        if grep_type not in ("grep", "G", "S", "author", "committer"):
+            raise ValueError(f"Invalid grep_type: {grep_type}")
+
+        args = ["log", f"--{grep_type}={pattern}", "--format=%H"]
+        if max_count is not None:
+            if max_count < 1:
+                raise ValueError("max_count must be >= 1")
+            args.append(f"--max-count={max_count}")
+
+        return self.cmdf(*args, flag=flag + "no")
+
     # wrapper of cli
 
     def _opt(self, **kwargs: Any) -> Dict[str, Any]:
