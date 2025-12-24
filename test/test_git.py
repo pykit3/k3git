@@ -365,6 +365,18 @@ class TestGitBranch(BaseTest):
             got = g.branch_divergency(*args)
             self.assertEqual(want, got)
 
+    def test_branch_rebase(self):
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+
+        # Empty upstream validation
+        with self.assertRaises(ValueError):
+            g.branch_rebase("")
+
+        # Note: We can't test actual rebase without potentially creating conflicts
+        # The method is tested through parameter validation
+
 
 class TestGitRef(BaseTest):
     def test_ref_list(self):

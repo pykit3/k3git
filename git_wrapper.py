@@ -244,6 +244,26 @@ class Git(object):
 
         return (base, b_logs, u_logs)
 
+    def branch_rebase(self, upstream: str, flag: str = "x") -> None:
+        """Rebase current branch onto upstream.
+
+        Args:
+            upstream: Branch or commit to rebase onto
+            flag: Command execution flags
+
+        Examples:
+            >>> git.branch_rebase('master')
+            >>> git.branch_rebase('origin/main')
+
+        Raises:
+            ValueError: If upstream is empty
+            CalledProcessError: If rebase fails or conflicts occur
+        """
+        if not upstream:
+            raise ValueError("upstream cannot be empty")
+
+        self.cmdf("rebase", upstream, flag=flag)
+
     # head
 
     def head_branch(self, flag: str = "") -> Any:
