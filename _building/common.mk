@@ -8,7 +8,7 @@ test:
 	env "PATH=$$PATH" UT_DEBUG=0 PYTHONPATH="$$(cd ..; pwd)" python -m unittest discover -c --failfast -s .
 
 doc:
-	make -C docs html
+	mkdocs build
 
 lint:
 	# ruff format: fast Python code formatter (Black-compatible)
