@@ -84,7 +84,8 @@ jobs:
 
     - name: Test building doc
       run: |
-        # Install docs dependencies directly to avoid conflicts with runtime deps
+        # Install package first, then docs tools separately to avoid sphinx conflict
+        pip install -e .
         pip install mkdocs mkdocs-material "mkdocstrings[python]"
         mkdocs build
 
