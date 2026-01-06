@@ -394,7 +394,7 @@ class Git(object):
             try:
                 self.remote_push(remote, branch, flag="x")
                 results[remote] = True
-            except CalledProcessError as e:
+            except CalledProcessError:
                 results[remote] = False
                 if "x" in flag:
                     raise
