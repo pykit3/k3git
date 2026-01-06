@@ -21,7 +21,7 @@ static_check:
 	uvx mypy . --ignore-missing-imports
 
 readme:
-	python _building/build_readme.py
+	pk3 readme
 
 release:
 	pk3 tag
