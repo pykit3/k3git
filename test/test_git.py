@@ -552,9 +552,7 @@ class TestGitTree(BaseTest):
         commit = g.tree_commit(tree, "test_tree_commit", [g.rev_of("master")])
         dd("commit:", commit)
 
-        got = cmdout(
-            origit, "log", commit, "-n2", "--stat", '--format="%s"', cwd=superp
-        )
+        got = cmdout(origit, "log", commit, "-n2", "--stat", '--format="%s"', cwd=superp)
         dd(got)
 
         self.assertEqual(
@@ -766,14 +764,10 @@ class TestGitTreeItem(BaseTest):
         obj = itm["object"]
 
         got = g.treeitem_new("foo", obj)
-        self.assertEqual(
-            "100644 blob 15d2fff1101916d7212371fea0f3a82bda750f6c\tfoo", got
-        )
+        self.assertEqual("100644 blob 15d2fff1101916d7212371fea0f3a82bda750f6c\tfoo", got)
 
         got = g.treeitem_new("foo", obj, mode="100755")
-        self.assertEqual(
-            "100755 blob 15d2fff1101916d7212371fea0f3a82bda750f6c\tfoo", got
-        )
+        self.assertEqual("100755 blob 15d2fff1101916d7212371fea0f3a82bda750f6c\tfoo", got)
 
 
 class TestGitAdd(BaseTest):

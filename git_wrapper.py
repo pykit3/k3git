@@ -100,9 +100,7 @@ class Git(object):
         """Fetch from remote repository."""
         return self.cmdf("fetch", name, flag=flag)
 
-    def fetch_url(
-        self, url: str, refspec: str, no_tags: bool = True, flag: str = "x"
-    ) -> None:
+    def fetch_url(self, url: str, refspec: str, no_tags: bool = True, flag: str = "x") -> None:
         """Fetch refspec from URL without adding remote.
 
         Args:
@@ -174,9 +172,7 @@ class Git(object):
         self.cmdf("commit", "-m", message, flag=flag)
         return self.cmdf("rev-parse", "HEAD", flag=flag + "n0")
 
-    def reset_to_commit(
-        self, mode: str, target: Optional[str] = None, flag: str = "x"
-    ) -> Any:
+    def reset_to_commit(self, mode: str, target: Optional[str] = None, flag: str = "x") -> Any:
         """Reset HEAD to specified commit.
 
         Args:
@@ -221,9 +217,7 @@ class Git(object):
 
     def branch_default_remote(self, branch: str, flag: str = "") -> Any:
         """Get default remote name for branch."""
-        return self.cmdf(
-            "config", "--get", "branch.{}.remote".format(branch), flag=flag + "n0"
-        )
+        return self.cmdf("config", "--get", "branch.{}.remote".format(branch), flag=flag + "n0")
 
     def branch_default_upstream(self, branch: str, flag: str = "") -> Any:
         """Get upstream branch name (e.g., origin/master for master)."""
@@ -259,9 +253,7 @@ class Git(object):
 
         return self.cmdf("merge-base", branch, other, flag=flag + "0")
 
-    def branch_divergency(
-        self, branch: str, upstream: Optional[str] = None, flag: str = ""
-    ) -> Tuple[Any, Any, Any]:
+    def branch_divergency(self, branch: str, upstream: Optional[str] = None, flag: str = "") -> Tuple[Any, Any, Any]:
         """Get divergency between branch and upstream.
 
         Returns:
@@ -426,9 +418,7 @@ class Git(object):
         for c in parent_commits:
             parent_args.extend(["-p", c])
 
-        return self.cmdf(
-            "commit-tree", treeish, *parent_args, input=commit_message, flag=flag + "n0"
-        )
+        return self.cmdf("commit-tree", treeish, *parent_args, input=commit_message, flag=flag + "n0")
 
     def tree_items(
         self,
@@ -729,9 +719,7 @@ class Git(object):
 
     def cmdf(self, *args: str, flag: str = "", **kwargs: Any) -> Any:
         """Execute git command with configured options."""
-        return cmdf(
-            self.gitpath, *self._args(), *args, flag=flag, **self._opt(**kwargs)
-        )
+        return cmdf(self.gitpath, *self._args(), *args, flag=flag, **self._opt(**kwargs))
 
     def out(self, fd: int, *msg: str) -> None:
         """Write formatted output to file descriptor."""

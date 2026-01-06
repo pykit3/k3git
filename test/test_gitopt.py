@@ -83,9 +83,7 @@ class TestGitOpt(unittest.TestCase):
         self.assertEqual(["-C", "c"], o.to_args())
 
     def test_clone(self):
-        o = GitOpt().parse_args(
-            ["-C", "a", "--version", "--bar"], additional={"--bar": True}
-        )
+        o = GitOpt().parse_args(["-C", "a", "--version", "--bar"], additional={"--bar": True})
 
         p = o.clone()
         p.update({"startpath": "c"})
