@@ -1,11 +1,16 @@
 all: test lint readme doc
 
-.PHONY: test lint
+.PHONY: test lint cov
 sudo_test:
 	sudo env "PATH=$$PATH" UT_DEBUG=0 pytest -v
 
 test:
 	env UT_DEBUG=0 pytest -v
+
+cov:
+	coverage run --source=. -m pytest
+	coverage html
+	open htmlcov/index.html
 
 doc:
 	mkdocs build
