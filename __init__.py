@@ -11,7 +11,9 @@ To parse a git command ``git --git-dir=/foo fetch origin``:
 
 """
 
-__version__ = "0.1.14"
+from importlib.metadata import version
+
+__version__ = version("k3git")
 __name__ = "k3git"
 
 from .gitopt import GitOpt

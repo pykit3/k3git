@@ -23,11 +23,11 @@ static_check:
 readme:
 	python _building/build_readme.py
 
-build_setup_py:
-	PYTHONPATH="$$(cd ..; pwd)" python _building/build_setup.py
+release:
+	pk3 tag
 
 publish:
-	./_building/publish.sh
+	pk3 publish
 
 install:
-	./_building/install.sh
+	pip install -e .
