@@ -2,10 +2,10 @@ all: test lint readme doc
 
 .PHONY: test lint
 sudo_test:
-	sudo env "PATH=$$PATH" UT_DEBUG=0 PYTHONPATH="$$(cd ..; pwd)" python -m unittest discover -c --failfast -s .
+	sudo env "PATH=$$PATH" UT_DEBUG=0 pytest -v
 
 test:
-	env "PATH=$$PATH" UT_DEBUG=0 PYTHONPATH="$$(cd ..; pwd)" python -m unittest discover -c --failfast -s .
+	env UT_DEBUG=0 pytest -v
 
 doc:
 	mkdocs build
