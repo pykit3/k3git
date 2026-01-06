@@ -45,6 +45,11 @@ publish = [
     "twine",
     "pk3",
 ]
+docs = [
+    "jinja2>=3.0,<4.0",
+    "PyYAML>=6.0,<7.0",
+    "sphinx>=4.3,<6.0",
+]
 
 [tool.setuptools]
 packages = ["k3git"]
