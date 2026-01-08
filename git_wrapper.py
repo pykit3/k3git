@@ -3,7 +3,7 @@
 
 import logging
 import os
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple, Any, Union
 
 from k3handy import cmdf
 from k3handy import parse_flag
@@ -61,9 +61,9 @@ class Git(object):
         Examples:
             >>> git.repo_root()
             '/Users/user/project'
-            >>> git.repo_root(flag='x')  # Raises if not in git repo
+            >>> git.repo_root(flag=['raise'])  # Raises if not in git repo
         """
-        return self.cmdf("rev-parse", "--show-toplevel", flag=flag + "n0")
+        return self.cmdf("rev-parse", "--show-toplevel", flag=parse_flag(flag, ["none", "oneline"]))
 
     def repo_is_repository(self, path: Optional[str] = None) -> bool:
         """Check if path is a git repository.
@@ -92,7 +92,7 @@ class Git(object):
 
     # high level API
 
-    def checkout(self, branch: str, flag: str = "x") -> Any:
+    def checkout(self, branch: str, flag: Union[str, List[str]] = ["raise"]) -> Any:
         """Checkout specified branch."""
         return self.cmdf("checkout", branch, flag=flag)
 
@@ -100,7 +100,7 @@ class Git(object):
         """Fetch from remote repository."""
         return self.cmdf("fetch", name, flag=flag)
 
-    def fetch_url(self, url: str, refspec: str, no_tags: bool = True, flag: str = "x") -> None:
+    def fetch_url(self, url: str, refspec: str, no_tags: bool = True, flag: Union[str, List[str]] = ["raise"]) -> None:
         """Fetch refspec from URL without adding remote.
 
         Args:
@@ -132,7 +132,7 @@ class Git(object):
 
         self.cmdf(*args, flag=flag)
 
-    def add(self, *files: str, update: bool = False, flag: str = "x") -> Any:
+    def add(self, *files: str, update: bool = False, flag: Union[str, List[str]] = ["raise"]) -> Any:
         """Add files to staging area.
 
         Args:
@@ -159,7 +159,7 @@ class Git(object):
 
         return self.cmdf("add", *args, flag=flag)
 
-    def commit(self, message, flag="x"):
+    def commit(self, message, flag=["raise"]):
         """Commit staged changes with message.
 
         Args:
@@ -170,9 +170,9 @@ class Git(object):
             str: Commit hash of new commit
         """
         self.cmdf("commit", "-m", message, flag=flag)
-        return self.cmdf("rev-parse", "HEAD", flag=flag + "n0")
+        return self.cmdf("rev-parse", "HEAD", flag=parse_flag(flag, ["none", "oneline"]))
 
-    def reset_to_commit(self, mode: str, target: Optional[str] = None, flag: str = "x") -> Any:
+    def reset_to_commit(self, mode: str, target: Optional[str] = None, flag: Union[str, List[str]] = ["raise"]) -> Any:
         """Reset HEAD to specified commit.
 
         Args:
@@ -211,13 +211,15 @@ class Git(object):
             >>> git.worktree_staged_files()
             []  # Nothing staged
         """
-        return self.cmdf("diff", "--name-only", "--cached", flag=flag + "no")
+        return self.cmdf("diff", "--name-only", "--cached", flag=parse_flag(flag, ["none", "stdout"]))
 
     # branch
 
     def branch_default_remote(self, branch: str, flag: str = "") -> Any:
         """Get default remote name for branch."""
-        return self.cmdf("config", "--get", "branch.{}.remote".format(branch), flag=flag + "n0")
+        return self.cmdf(
+            "config", "--get", "branch.{}.remote".format(branch), flag=parse_flag(flag, ["none", "oneline"])
+        )
 
     def branch_default_upstream(self, branch: str, flag: str = "") -> Any:
         """Get upstream branch name (e.g., origin/master for master)."""
@@ -226,10 +228,10 @@ class Git(object):
             "--abbrev-ref",
             "--symbolic-full-name",
             branch + "@{upstream}",
-            flag=flag + "n0",
+            flag=parse_flag(flag, ["none", "oneline"]),
         )
 
-    def branch_set(self, branch: str, rev: str, flag: str = "x") -> None:
+    def branch_set(self, branch: str, rev: str, flag: Union[str, List[str]] = ["raise"]) -> None:
         """Set branch reference to specified revision."""
 
         self.cmdf("update-ref", "refs/heads/{}".format(branch), rev, flag=flag)
@@ -251,7 +253,7 @@ class Git(object):
     def branch_common_base(self, branch: str, other: str, flag: str = "") -> Any:
         """Find merge base commit of two branches."""
 
-        return self.cmdf("merge-base", branch, other, flag=flag + "0")
+        return self.cmdf("merge-base", branch, other, flag=parse_flag(flag, ["oneline"]))
 
     def branch_divergency(self, branch: str, upstream: Optional[str] = None, flag: str = "") -> Tuple[Any, Any, Any]:
         """Get divergency between branch and upstream.
@@ -261,16 +263,16 @@ class Git(object):
         """
 
         if upstream is None:
-            upstream = self.branch_default_upstream(branch, flag="x")
+            upstream = self.branch_default_upstream(branch, flag=["raise"])
 
-        base = self.branch_common_base(branch, upstream, flag="x")
+        base = self.branch_common_base(branch, upstream, flag=["raise"])
 
-        b_logs = self.cmdf("log", "--format=%H", base + ".." + branch, flag="xo")
-        u_logs = self.cmdf("log", "--format=%H", base + ".." + upstream, flag="xo")
+        b_logs = self.cmdf("log", "--format=%H", base + ".." + branch, flag=["raise", "stdout"])
+        u_logs = self.cmdf("log", "--format=%H", base + ".." + upstream, flag=["raise", "stdout"])
 
         return (base, b_logs, u_logs)
 
-    def branch_rebase(self, upstream: str, flag: str = "x") -> None:
+    def branch_rebase(self, upstream: str, flag: Union[str, List[str]] = ["raise"]) -> None:
         """Rebase current branch onto upstream.
 
         Args:
@@ -290,7 +292,7 @@ class Git(object):
 
         self.cmdf("rebase", upstream, flag=flag)
 
-    def branch_merge_ff(self, upstream: Optional[str] = None, flag: str = "x") -> None:
+    def branch_merge_ff(self, upstream: Optional[str] = None, flag: Union[str, List[str]] = ["raise"]) -> None:
         """Fast-forward merge upstream into current branch.
 
         Args:
@@ -318,19 +320,19 @@ class Git(object):
 
     def head_branch(self, flag: str = "") -> Any:
         """Get current branch name."""
-        return self.cmdf("symbolic-ref", "--short", "HEAD", flag=flag + "n0")
+        return self.cmdf("symbolic-ref", "--short", "HEAD", flag=parse_flag(flag, ["none", "oneline"]))
 
     # remote
 
     def remote_get(self, name: str, flag: str = "") -> Any:
         """Get URL for remote."""
-        return self.cmdf("remote", "get-url", name, flag=flag + "n0")
+        return self.cmdf("remote", "get-url", name, flag=parse_flag(flag, ["none", "oneline"]))
 
-    def remote_add(self, name: str, url: str, flag: str = "x", **options: Any) -> None:
+    def remote_add(self, name: str, url: str, flag: Union[str, List[str]] = ["raise"], **options: Any) -> None:
         """Add remote with name and URL."""
         self.cmdf("remote", "add", name, url, **options, flag=flag)
 
-    def remote_push(self, remote: str, branch: str, flag: str = "x") -> None:
+    def remote_push(self, remote: str, branch: str, flag: Union[str, List[str]] = ["raise"]) -> None:
         """Push branch to remote.
 
         Args:
@@ -353,7 +355,7 @@ class Git(object):
 
         self.cmdf("push", remote, branch, flag=flag)
 
-    def remote_push_all(self, branch: str, flag: str = "x") -> Dict[str, bool]:
+    def remote_push_all(self, branch: str, flag: Union[str, List[str]] = ["raise"]) -> Dict[str, bool]:
         """Push branch to all configured remotes.
 
         Args:
@@ -371,7 +373,7 @@ class Git(object):
 
         Raises:
             ValueError: If branch is empty
-            CalledProcessError: If flag='x' and any push fails
+            CalledProcessError: If flag=['raise'] and any push fails
         """
         if not branch:
             raise ValueError("branch cannot be empty")
@@ -379,16 +381,16 @@ class Git(object):
         # Get all remotes
         from k3handy import CalledProcessError
 
-        remotes_output = self.cmdf("remote", flag="xo")
+        remotes_output = self.cmdf("remote", flag=["raise", "stdout"])
         results = {}
 
         for remote in remotes_output:
             try:
-                self.remote_push(remote, branch, flag="x")
+                self.remote_push(remote, branch, flag=["raise"])
                 results[remote] = True
             except CalledProcessError:
                 results[remote] = False
-                if "x" in flag:
+                if "raise" in parse_flag(flag):
                     raise
 
         return results
@@ -397,20 +399,20 @@ class Git(object):
 
     def blob_new(self, f: str, flag: str = "") -> Any:
         """Create new blob from file."""
-        return self.cmdf("hash-object", "-w", f, flag=flag + "n0")
+        return self.cmdf("hash-object", "-w", f, flag=parse_flag(flag, ["none", "oneline"]))
 
     #  tree
 
     def tree_of(self, commit: str, flag: str = "") -> Any:
         """Get tree hash of commit."""
-        return self.cmdf("rev-parse", commit + "^{tree}", flag=flag + "n0")
+        return self.cmdf("rev-parse", commit + "^{tree}", flag=parse_flag(flag, ["none", "oneline"]))
 
     def tree_commit(
         self,
         treeish: str,
         commit_message: str,
         parent_commits: List[str],
-        flag: str = "x",
+        flag: Union[str, List[str]] = ["raise"],
     ) -> Any:
         """Create commit from tree with message and parents."""
 
@@ -418,14 +420,16 @@ class Git(object):
         for c in parent_commits:
             parent_args.extend(["-p", c])
 
-        return self.cmdf("commit-tree", treeish, *parent_args, input=commit_message, flag=flag + "n0")
+        return self.cmdf(
+            "commit-tree", treeish, *parent_args, input=commit_message, flag=parse_flag(flag, ["none", "oneline"])
+        )
 
     def tree_items(
         self,
         treeish: str,
         name_only: bool = False,
         with_size: bool = False,
-        flag: str = "x",
+        flag: Union[str, List[str]] = ["raise"],
     ) -> Any:
         """List items in tree."""
         args = []
@@ -434,7 +438,7 @@ class Git(object):
 
         if with_size:
             args.append("--long")
-        return self.cmdf("ls-tree", treeish, *args, flag=flag + "no")
+        return self.cmdf("ls-tree", treeish, *args, flag=parse_flag(flag, ["none", "stdout"]))
 
     def tree_add_obj(self, cur_tree: str, path: str, treeish: str) -> Any:
         """Add object to tree at specified path."""
@@ -444,7 +448,7 @@ class Git(object):
         itms = self.tree_items(cur_tree)
 
         if sep not in path:
-            return self.tree_new_replace(itms, path, treeish, flag="x")
+            return self.tree_new_replace(itms, path, treeish, flag=["raise"])
 
         # a/b/c -> a, b/c
         p0, left = path.split(sep, 1)
@@ -453,12 +457,12 @@ class Git(object):
         if p0item is None:
             newsubtree = treeish
             for p in reversed(left.split(sep)):
-                newsubtree = self.tree_new_replace([], p, newsubtree, flag="x")
+                newsubtree = self.tree_new_replace([], p, newsubtree, flag=["raise"])
         else:
             subtree = p0item["object"]
             newsubtree = self.tree_add_obj(subtree, left, treeish)
 
-        return self.tree_new_replace(itms, p0, newsubtree, flag="x")
+        return self.tree_new_replace(itms, p0, newsubtree, flag=["raise"])
 
     def tree_find_item(
         self, treeish: str, fn: Optional[str] = None, typ: Optional[str] = None
@@ -505,10 +509,10 @@ class Git(object):
 
         return rst
 
-    def tree_new(self, itms: List[str], flag: str = "x") -> Any:
+    def tree_new(self, itms: List[str], flag: Union[str, List[str]] = ["raise"]) -> Any:
         """Create new tree from items."""
 
-        treeish = self.cmdf("mktree", input="\n".join(itms), flag=flag + "n0")
+        treeish = self.cmdf("mktree", input="\n".join(itms), flag=parse_flag(flag, ["none", "oneline"]))
         return treeish
 
     def tree_new_replace(
@@ -517,13 +521,13 @@ class Git(object):
         name: str,
         obj: str,
         mode: Optional[str] = None,
-        flag: str = "x",
+        flag: Union[str, List[str]] = ["raise"],
     ) -> Any:
         """Create new tree replacing/adding item."""
 
         new_items = self.treeitems_replace_item(itms, name, obj, mode=mode)
 
-        new_treeish = self.cmdf("mktree", input="\n".join(new_items), flag=flag + "n0")
+        new_treeish = self.cmdf("mktree", input="\n".join(new_items), flag=parse_flag(flag, ["none", "oneline"]))
         return new_treeish
 
     def treeitems_replace_item(
@@ -544,7 +548,7 @@ class Git(object):
     def treeitem_new(self, name: str, obj: str, mode: Optional[str] = None) -> str:
         """Create new tree item string."""
 
-        typ = self.obj_type(obj, flag="x")
+        typ = self.obj_type(obj, flag=["raise"])
         item_fmt = "{mode} {typ} {object}\t{name}"
 
         if typ == "tree":
@@ -578,7 +582,7 @@ class Git(object):
         #  104403398142d4643669be8099697a6b51bbbc62 refs/remotes/origin/master
         #  4a90cdaec2e7bb945c9a49148919db0a6ffa059d refs/tags/v0.1.0
         #  b1af433f3291ff137679ad3889be5d72377f0cb6 refs/tags/v0.1.10
-        hash_and_refs = self.cmdf("show-ref", flag=parse_flag("xo", flag))
+        hash_and_refs = self.cmdf("show-ref", flag=parse_flag(["raise", "stdout"], flag))
 
         res = {}
         for line in hash_and_refs:
@@ -588,7 +592,7 @@ class Git(object):
 
         return res
 
-    def ref_delete(self, ref: str, flag: str = "x") -> None:
+    def ref_delete(self, ref: str, flag: Union[str, List[str]] = ["raise"]) -> None:
         """Delete a git reference.
 
         Args:
@@ -620,11 +624,11 @@ class Git(object):
         Returns:
             str: SHA hash or None if not found
         """
-        return self.cmdf("rev-parse", "--verify", "--quiet", name, flag=flag + "n0")
+        return self.cmdf("rev-parse", "--verify", "--quiet", name, flag=parse_flag(flag, ["none", "oneline"]))
 
     def obj_type(self, obj: str, flag: str = "") -> Any:
         """Get object type (blob, tree, commit, tag)."""
-        return self.cmdf("cat-file", "-t", obj, flag=flag + "n0")
+        return self.cmdf("cat-file", "-t", obj, flag=parse_flag(flag, ["none", "oneline"]))
 
     # log
 
@@ -658,7 +662,7 @@ class Git(object):
         if not ref:
             raise ValueError("ref cannot be empty")
 
-        return self.cmdf("log", "-1", "--format=" + format, ref, flag=flag + "n0")
+        return self.cmdf("log", "-1", "--format=" + format, ref, flag=parse_flag(flag, ["none", "oneline"]))
 
     def log_grep(
         self,
@@ -701,7 +705,7 @@ class Git(object):
                 raise ValueError("max_count must be >= 1")
             args.append(f"--max-count={max_count}")
 
-        return self.cmdf(*args, flag=flag + "no")
+        return self.cmdf(*args, flag=parse_flag(flag, ["none", "stdout"]))
 
     # wrapper of cli
 
