@@ -8,6 +8,8 @@ from typing import Dict, List, Optional, Tuple, Any, Union
 from k3handy import cmdf
 from k3handy import parse_flag
 from k3handy import pabs
+from k3handy import CmdFlag
+from k3handy import CMD_RAISE_STDOUT
 from k3str import to_utf8
 
 logger = logging.getLogger(__name__)
@@ -61,7 +63,7 @@ class Git(object):
         Examples:
             >>> git.repo_root()
             '/Users/user/project'
-            >>> git.repo_root(flag=['raise'])  # Raises if not in git repo
+            >>> git.repo_root(flag=CmdFlag.RAISE)  # Raises if not in git repo
         """
         return self.cmdf("rev-parse", "--show-toplevel", flag=parse_flag(flag, ["none", "oneline"]))
 
@@ -159,7 +161,7 @@ class Git(object):
 
         return self.cmdf("add", *args, flag=flag)
 
-    def commit(self, message, flag=["raise"]):
+    def commit(self, message, flag=CmdFlag.RAISE):
         """Commit staged changes with message.
 
         Args:
@@ -263,12 +265,12 @@ class Git(object):
         """
 
         if upstream is None:
-            upstream = self.branch_default_upstream(branch, flag=["raise"])
+            upstream = self.branch_default_upstream(branch, flag=CmdFlag.RAISE)
 
-        base = self.branch_common_base(branch, upstream, flag=["raise"])
+        base = self.branch_common_base(branch, upstream, flag=CmdFlag.RAISE)
 
-        b_logs = self.cmdf("log", "--format=%H", base + ".." + branch, flag=["raise", "stdout"])
-        u_logs = self.cmdf("log", "--format=%H", base + ".." + upstream, flag=["raise", "stdout"])
+        b_logs = self.cmdf("log", "--format=%H", base + ".." + branch, flag=CMD_RAISE_STDOUT)
+        u_logs = self.cmdf("log", "--format=%H", base + ".." + upstream, flag=CMD_RAISE_STDOUT)
 
         return (base, b_logs, u_logs)
 
@@ -373,7 +375,7 @@ class Git(object):
 
         Raises:
             ValueError: If branch is empty
-            CalledProcessError: If flag=['raise'] and any push fails
+            CalledProcessError: If flag=CmdFlag.RAISE and any push fails
         """
         if not branch:
             raise ValueError("branch cannot be empty")
@@ -381,12 +383,12 @@ class Git(object):
         # Get all remotes
         from k3handy import CalledProcessError
 
-        remotes_output = self.cmdf("remote", flag=["raise", "stdout"])
+        remotes_output = self.cmdf("remote", flag=CMD_RAISE_STDOUT)
         results = {}
 
         for remote in remotes_output:
             try:
-                self.remote_push(remote, branch, flag=["raise"])
+                self.remote_push(remote, branch, flag=CmdFlag.RAISE)
                 results[remote] = True
             except CalledProcessError:
                 results[remote] = False
@@ -448,7 +450,7 @@ class Git(object):
         itms = self.tree_items(cur_tree)
 
         if sep not in path:
-            return self.tree_new_replace(itms, path, treeish, flag=["raise"])
+            return self.tree_new_replace(itms, path, treeish, flag=CmdFlag.RAISE)
 
         # a/b/c -> a, b/c
         p0, left = path.split(sep, 1)
@@ -457,12 +459,12 @@ class Git(object):
         if p0item is None:
             newsubtree = treeish
             for p in reversed(left.split(sep)):
-                newsubtree = self.tree_new_replace([], p, newsubtree, flag=["raise"])
+                newsubtree = self.tree_new_replace([], p, newsubtree, flag=CmdFlag.RAISE)
         else:
             subtree = p0item["object"]
             newsubtree = self.tree_add_obj(subtree, left, treeish)
 
-        return self.tree_new_replace(itms, p0, newsubtree, flag=["raise"])
+        return self.tree_new_replace(itms, p0, newsubtree, flag=CmdFlag.RAISE)
 
     def tree_find_item(
         self, treeish: str, fn: Optional[str] = None, typ: Optional[str] = None
@@ -548,7 +550,7 @@ class Git(object):
     def treeitem_new(self, name: str, obj: str, mode: Optional[str] = None) -> str:
         """Create new tree item string."""
 
-        typ = self.obj_type(obj, flag=["raise"])
+        typ = self.obj_type(obj, flag=CmdFlag.RAISE)
         item_fmt = "{mode} {typ} {object}\t{name}"
 
         if typ == "tree":

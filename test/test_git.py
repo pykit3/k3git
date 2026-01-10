@@ -8,6 +8,9 @@ from k3fs import fwrite
 from k3git import Git
 from k3git import GitOpt
 from k3handy import CalledProcessError
+from k3handy import CmdFlag
+from k3handy import CMD_RAISE_STDOUT
+from k3handy import CMD_RAISE_ONELINE
 from k3handy.cmdutil import cmd0
 from k3handy.cmdutil import cmdf
 from k3handy.cmdutil import cmdout
@@ -77,7 +80,7 @@ class TestGitRepo(BaseTest):
 
         # Not in git repo with flag=['raise'] - should raise
         with self.assertRaises(CalledProcessError):
-            g_no_repo.repo_root(flag=["raise"])
+            g_no_repo.repo_root(flag=CmdFlag.RAISE)
 
     def test_repo_is_repository(self):
         fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
@@ -113,7 +116,7 @@ class TestGitHighlevel(BaseTest):
         g = Git(GitOpt(), cwd=superp)
 
         g.fetch(wowgitp)
-        hsh = g.cmdf("log", "-n1", "--format=%H", "FETCH_HEAD", flag=["oneline"])
+        hsh = g.cmdf("log", "-n1", "--format=%H", "FETCH_HEAD", flag=CmdFlag.ONELINE)
 
         self.assertEqual("6bf37e52cbafcf55ff4710bb2b63309b55bf8e54", hsh)
 
@@ -130,7 +133,7 @@ class TestGitHighlevel(BaseTest):
 
         # Successful fetch from URL
         g.fetch_url(wowgitp, "refs/heads/master:refs/remotes/test/master")
-        hsh = g.cmdf("log", "-n1", "--format=%H", "refs/remotes/test/master", flag=["oneline"])
+        hsh = g.cmdf("log", "-n1", "--format=%H", "refs/remotes/test/master", flag=CmdFlag.ONELINE)
         self.assertEqual("6bf37e52cbafcf55ff4710bb2b63309b55bf8e54", hsh)
 
     def test_reset_to_commit(self):
@@ -158,7 +161,7 @@ class TestGitHighlevel(BaseTest):
 
         g.reset_to_commit("soft")
 
-        out = g.cmdf("diff", "--name-only", "--relative", flag=["raise", "stdout"])
+        out = g.cmdf("diff", "--name-only", "--relative", flag=CMD_RAISE_STDOUT)
         self.assertEqual(
             [
                 "x",
@@ -167,14 +170,14 @@ class TestGitHighlevel(BaseTest):
             "dirty worktree",
         )
 
-        out = g.cmdf("diff", "--name-only", "--relative", "HEAD", flag=["raise", "stdout"])
+        out = g.cmdf("diff", "--name-only", "--relative", "HEAD", flag=CMD_RAISE_STDOUT)
         self.assertEqual(["x", "y"], out, "compare with HEAD")
 
         # soft to master
 
         g.reset_to_commit("soft", "master")
 
-        out = g.cmdf("diff", "--name-only", "--relative", flag=["raise", "stdout"])
+        out = g.cmdf("diff", "--name-only", "--relative", flag=CMD_RAISE_STDOUT)
         self.assertEqual(
             [
                 "x",
@@ -183,7 +186,7 @@ class TestGitHighlevel(BaseTest):
             "dirty worktree",
         )
 
-        out = g.cmdf("diff", "--name-only", "--relative", "HEAD", flag=["raise", "stdout"])
+        out = g.cmdf("diff", "--name-only", "--relative", "HEAD", flag=CMD_RAISE_STDOUT)
         self.assertEqual(
             [
                 "b2",
@@ -198,7 +201,7 @@ class TestGitHighlevel(BaseTest):
 
         g.reset_to_commit("hard", "master")
 
-        out = g.cmdf("diff", "--name-only", "--relative", "HEAD", flag=["raise", "stdout"])
+        out = g.cmdf("diff", "--name-only", "--relative", "HEAD", flag=CMD_RAISE_STDOUT)
         self.assertEqual([], out, "compare with HEAD")
 
 
@@ -451,7 +454,7 @@ class TestGitRef(BaseTest):
         self.assertNotIn("refs/heads/test-delete-branch", refs)
 
         # Deleting non-existent ref succeeds silently (git behavior)
-        g.ref_delete("refs/heads/nonexistent", flag=["raise"])  # Should not raise
+        g.ref_delete("refs/heads/nonexistent", flag=CmdFlag.RAISE)  # Should not raise
 
 
 class TestGitRev(BaseTest):
@@ -518,9 +521,9 @@ class TestGitRemote(BaseTest):
 
         # Test with no remotes - should return empty dict
         # First remove any existing remotes
-        remotes = g.cmdf("remote", flag=["raise", "stdout"])
+        remotes = g.cmdf("remote", flag=CMD_RAISE_STDOUT)
         for remote in remotes:
-            g.cmdf("remote", "remove", remote, flag=["raise"])
+            g.cmdf("remote", "remove", remote, flag=CmdFlag.RAISE)
 
         results = g.remote_push_all("master")
         self.assertEqual({}, results)
@@ -784,16 +787,16 @@ class TestGitAdd(BaseTest):
 
         # Test adding specific files
         g.add("test1.txt")
-        out = g.cmdf("status", "--short", flag=["raise", "stdout"])
+        out = g.cmdf("status", "--short", flag=CMD_RAISE_STDOUT)
         self.assertIn("A  test1.txt", "\n".join(out))
 
         # Test adding multiple files
         g.add("test2.txt", "test1.txt")
-        out = g.cmdf("status", "--short", flag=["raise", "stdout"])
+        out = g.cmdf("status", "--short", flag=CMD_RAISE_STDOUT)
         self.assertIn("A  test2.txt", "\n".join(out))
 
         # Commit to have tracked files for update test
-        g.cmdf("commit", "-m", "Add test files", flag=["raise"])
+        g.cmdf("commit", "-m", "Add test files", flag=CmdFlag.RAISE)
 
         # Modify files
         fwrite(branch_test_worktree_p, "test1.txt", "modified content 1")
@@ -801,7 +804,7 @@ class TestGitAdd(BaseTest):
 
         # Test update=True (should work without files)
         g.add(update=True)
-        out = g.cmdf("status", "--short", flag=["raise", "stdout"])
+        out = g.cmdf("status", "--short", flag=CMD_RAISE_STDOUT)
         self.assertIn("M  test1.txt", "\n".join(out))
         self.assertIn("M  test2.txt", "\n".join(out))
 
@@ -820,11 +823,11 @@ class TestGitAdd(BaseTest):
         self.assertEqual(len(commit_hash), 40)  # SHA-1 hash length
 
         # Verify commit message
-        out = g.cmdf("log", "-1", "--pretty=format:%s", flag=["raise", "stdout"])
+        out = g.cmdf("log", "-1", "--pretty=format:%s", flag=CMD_RAISE_STDOUT)
         self.assertEqual(["Add commit test file"], out)
 
         # Verify the commit hash matches HEAD
-        head_hash = g.cmdf("rev-parse", "HEAD", flag=["raise", "none", "oneline"])
+        head_hash = g.cmdf("rev-parse", "HEAD", flag=[CmdFlag.RAISE, CmdFlag.NONE, CmdFlag.ONELINE])
         self.assertEqual(commit_hash, head_hash)
 
 
@@ -854,7 +857,7 @@ class TestGitLog(BaseTest):
 
         # Not found with flag='x' - should raise
         with self.assertRaises(CalledProcessError):
-            g.log_date("nonexistent", flag=["raise"])
+            g.log_date("nonexistent", flag=CmdFlag.RAISE)
 
         # Empty ref validation
         with self.assertRaises(ValueError):
@@ -909,7 +912,7 @@ class TestGitOut(BaseTest):
     def test_out(self):
         script = r"""import k3git; k3git.Git(k3git.GitOpt(), ctxmsg="foo").out(1, "bar", "wow")"""
 
-        got = cmdf("python", "-c", script, flag=["raise", "oneline"])
+        got = cmdf("python", "-c", script, flag=CMD_RAISE_ONELINE)
         self.assertEqual("foo: bar wow", got)
 
 
