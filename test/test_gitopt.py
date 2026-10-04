@@ -2,6 +2,7 @@ import os
 import unittest
 
 import k3ut
+
 from k3git import GitOpt
 
 dd = k3ut.dd

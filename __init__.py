@@ -16,9 +16,9 @@ from importlib.metadata import version
 __version__ = version("k3git")
 __name__ = "k3git"
 
+from .git_wrapper import Git
 from .gitopt import GitOpt
 from .giturl import GitUrl
-from .git_wrapper import Git
 
 __all__ = [
     "Git",

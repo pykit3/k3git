@@ -21,9 +21,9 @@ pip install k3git
 ```python
 from k3git import GitOpt
 
-opt = GitOpt().parse_args(['--git-dir=/foo', 'fetch', 'origin'])
-print(opt.cmds)      # ['fetch', 'origin']
-print(opt.to_args()) # ['--git-dir=/foo']
+opt = GitOpt().parse_args(["--git-dir=/foo", "fetch", "origin"])
+print(opt.cmds)  # ['fetch', 'origin']
+print(opt.to_args())  # ['--git-dir=/foo']
 ```
 
 ### Work with git repositories
@@ -31,8 +31,8 @@ print(opt.to_args()) # ['--git-dir=/foo']
 ```python
 from k3git import Git
 
-git = Git('/path/to/repo')
-git.commit('commit message')
+git = Git("/path/to/repo")
+git.commit("commit message")
 ```
 
 ### Parse git URLs
@@ -40,7 +40,7 @@ git.commit('commit message')
 ```python
 from k3git import GitUrl
 
-url = GitUrl.parse('git@github.com:pykit3/k3git.git')
+url = GitUrl.parse("git@github.com:pykit3/k3git.git")
 print(url.host)  # github.com
 print(url.path)  # pykit3/k3git
 ```

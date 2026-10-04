@@ -3,19 +3,12 @@ import shutil
 import unittest
 
 import k3ut
-from k3fs import fread
-from k3fs import fwrite
-from k3git import Git
-from k3git import GitOpt
-from k3handy import CalledProcessError
-from k3handy import CmdFlag
-from k3handy import CMD_RAISE_STDOUT
-from k3handy import CMD_RAISE_ONELINE
-from k3handy.cmdutil import cmd0
-from k3handy.cmdutil import cmdf
-from k3handy.cmdutil import cmdout
-from k3handy.cmdutil import cmdx
+from k3fs import fread, fwrite
+from k3handy import CMD_RAISE_ONELINE, CMD_RAISE_STDOUT, CalledProcessError, CmdFlag
+from k3handy.cmdutil import cmd0, cmdf, cmdout, cmdx
 from k3handy.path import pjoin
+
+from k3git import Git, GitOpt
 
 dd = k3ut.dd
 
@@ -926,10 +919,10 @@ def _clean_case():
 def force_remove(fn):
     try:
         shutil.rmtree(fn)
-    except BaseException:
+    except OSError:
         pass
 
     try:
         os.unlink(fn)
-    except BaseException:
+    except OSError:
         pass

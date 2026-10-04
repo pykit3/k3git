@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 import os
 import re
 
@@ -153,7 +150,7 @@ rule_groups = [
 ]
 
 
-class GitUrl(object):
+class GitUrl:
     """
     GitUrl parse and format git urls
     """
@@ -251,8 +248,4 @@ class GitUrl(object):
 
                 return cls(d, g, p)
 
-        raise ValueError(
-            "unknown url: {url};".format(
-                url=url,
-            )
-        )
+        raise ValueError(f"unknown url: {url};")

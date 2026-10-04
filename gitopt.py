@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf-8
 
 import copy
 import logging
@@ -7,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class GitOpt(object):
+class GitOpt:
     """
     GitOpt parses and builds git command line arguments.
 
@@ -137,10 +136,9 @@ class GitOpt(object):
                 self.opt["super_prefix"] = arg.split("=", 1)[1]
                 continue
 
-            if additional is not None:
-                if arg in additional:
-                    self.additional[arg] = arg
-                    continue
+            if additional is not None and arg in additional:
+                self.additional[arg] = arg
+                continue
 
             # no match, push back
             self.cmds = [arg] + args
