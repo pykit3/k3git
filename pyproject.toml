@@ -26,9 +26,7 @@ classifiers = [
 ]
 dependencies = [
     "k3str>=0.1.1,<0.2",
-    "k3ut>=0.1.7,<0.2",
     "k3handy>=0.1.12,<0.2",
-    "k3fs>=0.1.5,<0.2",
 ]
 
 [project.urls]
@@ -40,6 +38,8 @@ dev = [
     "pytest>=7.0",
     "ruff",
     "coverage",
+    "k3ut>=0.1.7,<0.2",
+    "k3fs>=0.1.5,<0.2",
 ]
 publish = [
     "build",
