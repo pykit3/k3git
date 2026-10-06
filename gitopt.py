@@ -59,7 +59,7 @@ class GitOpt:
         update ``opt`` with a dictionary ``d``.
 
         Returns:
-            self
+            (GitOpt): ``self``.
         """
         for k, v in d.items():
             self.opt[k] = v
@@ -70,7 +70,7 @@ class GitOpt:
         clone a GitOpt object so that the returned object share nothing with the original.
 
         Returns:
-            GitOpt: a same and standalone object.
+            (GitOpt): a same and standalone object.
         """
         o = GitOpt()
         o.opt = copy.deepcopy(self.opt)
@@ -84,7 +84,7 @@ class GitOpt:
         Additional user defined arguments can be specified.
 
         Returns:
-            self
+            (GitOpt): ``self``.
         """
         while len(args) > 0:
             arg = args.pop(0)
@@ -158,7 +158,7 @@ class GitOpt:
             o.cmds      # ['fetch']
 
         Returns:
-            list: of str that can be used in commandline.
+            (list[str]): arguments that can be used in a command line.
         """
         o = self.opt
         rst = []

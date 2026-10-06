@@ -191,7 +191,7 @@ class GitUrl:
                         If absent, format by fields['sheme']
 
         Returns:
-            str: the formatted url
+            (str): the formatted url
         """
 
         if scheme is None:
@@ -225,7 +225,7 @@ class GitUrl:
                     - ``https://github.com/openacid/openacid.github.io.git``
 
         Returns:
-            GitUrl
+            (GitUrl): the parsed url.
         """
 
         for g in rule_groups:

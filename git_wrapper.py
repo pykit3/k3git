@@ -160,11 +160,11 @@ class Git:
         """Commit staged changes with message.
 
         Args:
-            message: Commit message (required)
-            flag: Command execution flags
+            message(str): Commit message (required)
+            flag(str | list[str]): Command execution flags
 
         Returns:
-            str: Commit hash of new commit
+            (str): Commit hash of new commit
         """
         self.cmdf("commit", "-m", message, flag=flag)
         return self.cmdf("rev-parse", "HEAD", flag=parse_flag(flag, ["none", "oneline"]))
