@@ -11,7 +11,6 @@ class GitOpt:
     GitOpt parses and builds git command line arguments.
 
     Attributes:
-
         cmds: parsed command, e.g. the cmds of parsed ``git --git-dir=/foo fetch origin`` is ``['fetch', 'origin']``.
 
         opt: parsed options.
@@ -21,9 +20,9 @@ class GitOpt:
 
         additional: GitOpt is able to parse user defined options::
 
-            o = GitOpt().parse_args(['--foo', 'fetch'], additional=['--foo'])
-            o.additional
-            # {'--foo': '--foo'}
+                o = GitOpt().parse_args(['--foo', 'fetch'], additional=['--foo'])
+                o.additional
+                # {'--foo': '--foo'}
     """
 
     # informative options just query for some info instead of doing anything.

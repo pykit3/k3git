@@ -160,7 +160,6 @@ class GitUrl:
         Create a GitUrl object.
 
         Args:
-
             fields(dict): fields of url components, such as 'user', 'repo',
                     'branch', 'token', 'committer'.
 
@@ -179,16 +178,15 @@ class GitUrl:
         format git url to scheme ssh or https
 
         Args:
+            scheme(str): specifies the output url format:
 
-           scheme(str): specifies the output url format:
+                - ``"ssh": 'git@{host}:{user}/{repo}.git'``,
 
-                        - ``"ssh": 'git@{host}:{user}/{repo}.git'``,
+                - ``"https": 'https://{host}/{user}/{repo}.git'``,
 
-                        - ``"https": 'https://{host}/{user}/{repo}.git'``,
+                - ``"https" with token present in fields: 'https://{committer}:{token}@{host}/{user}/{repo}.git'``,
 
-                        - ``"https" with token present in fields: 'https://{committer}:{token}@{host}/{user}/{repo}.git'``,
-
-                        If absent, format by fields['sheme']
+                If absent, format by fields['sheme']
 
         Returns:
             (str): the formatted url
@@ -215,14 +213,13 @@ class GitUrl:
         Parse plain text git url and return an instance of GitUrl.
 
         Args:
-
             url(str): git url in string in one form of:
 
-                    - ``git@github.com:openacid/slim.git``
-                    - ``ssh://git@github.com/openacid/openacid.github.io``
-                    - ``https://committer:token@github.com/openacid/openacid.github.io.git``
-                    - ``http://github.com/openacid/openacid.github.io.git``
-                    - ``https://github.com/openacid/openacid.github.io.git``
+                - ``git@github.com:openacid/slim.git``
+                - ``ssh://git@github.com/openacid/openacid.github.io``
+                - ``https://committer:token@github.com/openacid/openacid.github.io.git``
+                - ``http://github.com/openacid/openacid.github.io.git``
+                - ``https://github.com/openacid/openacid.github.io.git``
 
         Returns:
             (GitUrl): the parsed url.
