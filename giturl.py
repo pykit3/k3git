@@ -186,7 +186,7 @@ class GitUrl:
 
                 - ``"https" with token present in fields: 'https://{committer}:{token}@{host}/{user}/{repo}.git'``,
 
-                If absent, format by fields['sheme']
+                If absent, format by fields['scheme']
 
         Returns:
             (str): the formatted url
