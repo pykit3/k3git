@@ -427,7 +427,9 @@ class Git:
         flag: str | list[str] = CmdFlag.RAISE,
     ) -> Any:
         """List items in tree."""
-        args = []
+        # Without --full-tree, ls-tree run in a sub dir of the work tree lists
+        # only the entries under that dir
+        args = ["--full-tree"]
         if name_only:
             args.append("--name-only")
 

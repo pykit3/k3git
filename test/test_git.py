@@ -591,6 +591,22 @@ class TestGitTree(BaseTest):
         lines = g.tree_items(tree, name_only=True)
         self.assertEqual([".gift", "imsuperman"], lines)
 
+    def test_tree_items_in_sub_dir(self):
+        subdir = pjoin(superp, "foo")
+        os.mkdir(subdir)
+        g = Git(GitOpt(), cwd=subdir)
+
+        tree = g.tree_of("master")
+
+        lines = g.tree_items(tree)
+        self.assertEqual(
+            [
+                "100644 blob 15d2fff1101916d7212371fea0f3a82bda750f6c\t.gift",
+                "100644 blob a668431ae444a5b68953dc61b4b3c30e066535a2\timsuperman",
+            ],
+            lines,
+        )
+
     def test_treeitem_parse(self):
         g = Git(GitOpt(), cwd=superp)
 
