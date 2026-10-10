@@ -5,6 +5,7 @@ import os
 from typing import Any
 
 from k3handy import CMD_RAISE_STDOUT, CmdFlag, cmdf, pabs, parse_flag
+from k3handy.cmdutil import CmdFlagType
 from k3str import to_utf8
 
 logger = logging.getLogger(__name__)
@@ -46,7 +47,7 @@ class Git:
 
     # repo
 
-    def repo_root(self, flag: str = "") -> str | None:
+    def repo_root(self, flag: CmdFlagType = "") -> str | None:
         """Get repository root directory path.
 
         Args:
@@ -89,15 +90,15 @@ class Git:
 
     # high level API
 
-    def checkout(self, branch: str, flag: str | list[str] = CmdFlag.RAISE) -> Any:
+    def checkout(self, branch: str, flag: CmdFlagType = CmdFlag.RAISE) -> Any:
         """Checkout specified branch."""
         return self.cmdf("checkout", branch, flag=flag)
 
-    def fetch(self, name: str, flag: str = "") -> Any:
+    def fetch(self, name: str, flag: CmdFlagType = "") -> Any:
         """Fetch from remote repository."""
         return self.cmdf("fetch", name, flag=flag)
 
-    def fetch_url(self, url: str, refspec: str, no_tags: bool = True, flag: str | list[str] = CmdFlag.RAISE) -> None:
+    def fetch_url(self, url: str, refspec: str, no_tags: bool = True, flag: CmdFlagType = CmdFlag.RAISE) -> None:
         """Fetch refspec from URL without adding remote.
 
         Args:
@@ -129,7 +130,7 @@ class Git:
 
         self.cmdf(*args, flag=flag)
 
-    def add(self, *files: str, update: bool = False, flag: str | list[str] = CmdFlag.RAISE) -> Any:
+    def add(self, *files: str, update: bool = False, flag: CmdFlagType = CmdFlag.RAISE) -> Any:
         """Add files to staging area.
 
         Args:
@@ -169,7 +170,7 @@ class Git:
         self.cmdf("commit", "-m", message, flag=flag)
         return self.cmdf("rev-parse", "HEAD", flag=parse_flag(flag, ["none", "oneline"]))
 
-    def reset_to_commit(self, mode: str, target: str | None = None, flag: str | list[str] = CmdFlag.RAISE) -> Any:
+    def reset_to_commit(self, mode: str, target: str | None = None, flag: CmdFlagType = CmdFlag.RAISE) -> Any:
         """Reset HEAD to specified commit.
 
         Args:
@@ -183,7 +184,7 @@ class Git:
 
     # worktree
 
-    def worktree_is_clean(self, flag: str = "") -> bool:
+    def worktree_is_clean(self, flag: CmdFlagType = "") -> bool:
         """Check if working tree has no uncommitted changes."""
         # git bug:
         # Without running 'git status' first, "diff-index" in our test does not
@@ -192,7 +193,7 @@ class Git:
         code, _out, _err = self.cmdf("diff-index", "--quiet", "HEAD", "--", flag=flag)
         return code == 0
 
-    def worktree_staged_files(self, flag: str = "") -> list[str]:
+    def worktree_staged_files(self, flag: CmdFlagType = "") -> list[str]:
         """Get list of files with staged changes.
 
         Args:
@@ -212,11 +213,11 @@ class Git:
 
     # branch
 
-    def branch_default_remote(self, branch: str, flag: str = "") -> Any:
+    def branch_default_remote(self, branch: str, flag: CmdFlagType = "") -> Any:
         """Get default remote name for branch."""
         return self.cmdf("config", "--get", f"branch.{branch}.remote", flag=parse_flag(flag, ["none", "oneline"]))
 
-    def branch_default_upstream(self, branch: str, flag: str = "") -> Any:
+    def branch_default_upstream(self, branch: str, flag: CmdFlagType = "") -> Any:
         """Get upstream branch name (e.g., origin/master for master)."""
         return self.cmdf(
             "rev-parse",
@@ -226,12 +227,12 @@ class Git:
             flag=parse_flag(flag, ["none", "oneline"]),
         )
 
-    def branch_set(self, branch: str, rev: str, flag: str | list[str] = CmdFlag.RAISE) -> None:
+    def branch_set(self, branch: str, rev: str, flag: CmdFlagType = CmdFlag.RAISE) -> None:
         """Set branch reference to specified revision."""
 
         self.cmdf("update-ref", f"refs/heads/{branch}", rev, flag=flag)
 
-    def branch_list(self, scope: str = "local", flag: str = "") -> list[str]:
+    def branch_list(self, scope: str = "local", flag: CmdFlagType = "") -> list[str]:
         """List branches in specified scope."""
 
         refs = self.ref_list(flag=parse_flag(flag))
@@ -245,12 +246,14 @@ class Git:
 
         return sorted(res)
 
-    def branch_common_base(self, branch: str, other: str, flag: str = "") -> Any:
+    def branch_common_base(self, branch: str, other: str, flag: CmdFlagType = "") -> Any:
         """Find merge base commit of two branches."""
 
         return self.cmdf("merge-base", branch, other, flag=parse_flag(flag, ["oneline"]))
 
-    def branch_divergency(self, branch: str, upstream: str | None = None, flag: str = "") -> tuple[Any, Any, Any]:
+    def branch_divergency(
+        self, branch: str, upstream: str | None = None, flag: CmdFlagType = ""
+    ) -> tuple[Any, Any, Any]:
         """Get divergency between branch and upstream.
 
         Returns:
@@ -267,7 +270,7 @@ class Git:
 
         return (base, b_logs, u_logs)
 
-    def branch_rebase(self, upstream: str, flag: str | list[str] = CmdFlag.RAISE) -> None:
+    def branch_rebase(self, upstream: str, flag: CmdFlagType = CmdFlag.RAISE) -> None:
         """Rebase current branch onto upstream.
 
         Args:
@@ -287,7 +290,7 @@ class Git:
 
         self.cmdf("rebase", upstream, flag=flag)
 
-    def branch_merge_ff(self, upstream: str | None = None, flag: str | list[str] = CmdFlag.RAISE) -> None:
+    def branch_merge_ff(self, upstream: str | None = None, flag: CmdFlagType = CmdFlag.RAISE) -> None:
         """Fast-forward merge upstream into current branch.
 
         Args:
@@ -313,21 +316,21 @@ class Git:
 
     # head
 
-    def head_branch(self, flag: str = "") -> Any:
+    def head_branch(self, flag: CmdFlagType = "") -> Any:
         """Get current branch name."""
         return self.cmdf("symbolic-ref", "--short", "HEAD", flag=parse_flag(flag, ["none", "oneline"]))
 
     # remote
 
-    def remote_get(self, name: str, flag: str = "") -> Any:
+    def remote_get(self, name: str, flag: CmdFlagType = "") -> Any:
         """Get URL for remote."""
         return self.cmdf("remote", "get-url", name, flag=parse_flag(flag, ["none", "oneline"]))
 
-    def remote_add(self, name: str, url: str, flag: str | list[str] = CmdFlag.RAISE, **options: Any) -> None:
+    def remote_add(self, name: str, url: str, flag: CmdFlagType = CmdFlag.RAISE, **options: Any) -> None:
         """Add remote with name and URL."""
         self.cmdf("remote", "add", name, url, **options, flag=flag)
 
-    def remote_push(self, remote: str, branch: str, flag: str | list[str] = CmdFlag.RAISE) -> None:
+    def remote_push(self, remote: str, branch: str, flag: CmdFlagType = CmdFlag.RAISE) -> None:
         """Push branch to remote.
 
         Args:
@@ -350,7 +353,7 @@ class Git:
 
         self.cmdf("push", remote, branch, flag=flag)
 
-    def remote_push_all(self, branch: str, flag: str | list[str] = CmdFlag.RAISE) -> dict[str, bool]:
+    def remote_push_all(self, branch: str, flag: CmdFlagType = CmdFlag.RAISE) -> dict[str, bool]:
         """Push branch to all configured remotes.
 
         Args:
@@ -392,13 +395,13 @@ class Git:
 
     # blob
 
-    def blob_new(self, f: str, flag: str = "") -> Any:
+    def blob_new(self, f: str, flag: CmdFlagType = "") -> Any:
         """Create new blob from file."""
         return self.cmdf("hash-object", "-w", f, flag=parse_flag(flag, ["none", "oneline"]))
 
     #  tree
 
-    def tree_of(self, commit: str, flag: str = "") -> Any:
+    def tree_of(self, commit: str, flag: CmdFlagType = "") -> Any:
         """Get tree hash of commit."""
         return self.cmdf("rev-parse", commit + "^{tree}", flag=parse_flag(flag, ["none", "oneline"]))
 
@@ -407,7 +410,7 @@ class Git:
         treeish: str,
         commit_message: str,
         parent_commits: list[str],
-        flag: str | list[str] = CmdFlag.RAISE,
+        flag: CmdFlagType = CmdFlag.RAISE,
     ) -> Any:
         """Create commit from tree with message and parents."""
 
@@ -424,7 +427,7 @@ class Git:
         treeish: str,
         name_only: bool = False,
         with_size: bool = False,
-        flag: str | list[str] = CmdFlag.RAISE,
+        flag: CmdFlagType = CmdFlag.RAISE,
     ) -> Any:
         """List items in tree."""
         # Without --full-tree, ls-tree run in a sub dir of the work tree lists
@@ -504,7 +507,7 @@ class Git:
 
         return rst
 
-    def tree_new(self, itms: list[str], flag: str | list[str] = CmdFlag.RAISE) -> Any:
+    def tree_new(self, itms: list[str], flag: CmdFlagType = CmdFlag.RAISE) -> Any:
         """Create new tree from items."""
 
         treeish = self.cmdf("mktree", input="\n".join(itms), flag=parse_flag(flag, ["none", "oneline"]))
@@ -516,7 +519,7 @@ class Git:
         name: str,
         obj: str,
         mode: str | None = None,
-        flag: str | list[str] = CmdFlag.RAISE,
+        flag: CmdFlagType = CmdFlag.RAISE,
     ) -> Any:
         """Create new tree replacing/adding item."""
 
@@ -557,7 +560,7 @@ class Git:
 
     # ref
 
-    def ref_list(self, flag: str = "") -> dict[str, str]:
+    def ref_list(self, flag: CmdFlagType = "") -> dict[str, str]:
         """List all refs.
 
         Returns:
@@ -585,7 +588,7 @@ class Git:
 
         return res
 
-    def ref_delete(self, ref: str, flag: str | list[str] = CmdFlag.RAISE) -> None:
+    def ref_delete(self, ref: str, flag: CmdFlagType = CmdFlag.RAISE) -> None:
         """Delete a git reference.
 
         Args:
@@ -607,7 +610,7 @@ class Git:
 
     # rev
 
-    def rev_of(self, name: str, flag: str = "") -> str | None:
+    def rev_of(self, name: str, flag: CmdFlagType = "") -> str | None:
         """Get SHA hash of object.
 
         Args:
@@ -619,13 +622,13 @@ class Git:
         """
         return self.cmdf("rev-parse", "--verify", "--quiet", name, flag=parse_flag(flag, ["none", "oneline"]))
 
-    def obj_type(self, obj: str, flag: str = "") -> Any:
+    def obj_type(self, obj: str, flag: CmdFlagType = "") -> Any:
         """Get object type (blob, tree, commit, tag)."""
         return self.cmdf("cat-file", "-t", obj, flag=parse_flag(flag, ["none", "oneline"]))
 
     # log
 
-    def log_date(self, ref: str, format: str = "%ad", flag: str = "") -> str | None:
+    def log_date(self, ref: str, format: str = "%ad", flag: CmdFlagType = "") -> str | None:
         """Get date from commit log.
 
         Args:
@@ -662,7 +665,7 @@ class Git:
         pattern: str,
         grep_type: str = "grep",
         max_count: int | None = None,
-        flag: str = "",
+        flag: CmdFlagType = "",
     ) -> list[str]:
         """Find commits matching grep pattern.
 
@@ -714,7 +717,7 @@ class Git:
         """Get git command arguments."""
         return self.opt.to_args()
 
-    def cmdf(self, *args: str, flag: str = "", **kwargs: Any) -> Any:
+    def cmdf(self, *args: str, flag: CmdFlagType = "", **kwargs: Any) -> Any:
         """Execute git command with configured options."""
         return cmdf(self.gitpath, *self._args(), *args, flag=flag, **self._opt(**kwargs))
 
