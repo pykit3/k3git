@@ -4,7 +4,7 @@ import logging
 import os
 from typing import Any
 
-from k3handy import CMD_RAISE_STDOUT, CmdFlag, cmdf, pabs, parse_flag
+from k3handy import CMD_RAISE_STDOUT, CmdFlag, cmdf, command, pabs, parse_flag
 from k3handy.cmdutil import CmdFlagType
 from k3str import to_utf8
 
@@ -429,16 +429,30 @@ class Git:
         with_size: bool = False,
         flag: CmdFlagType = CmdFlag.RAISE,
     ) -> Any:
-        """List items in tree."""
+        """List items in tree.
+
+        A path is listed as it is, without the quotes that ``ls-tree`` adds to a path such as ``a"b``.
+        """
         # Without --full-tree, ls-tree run in a sub dir of the work tree lists
         # only the entries under that dir
-        args = ["--full-tree"]
+        args = ["-z", "--full-tree"]
         if name_only:
             args.append("--name-only")
 
         if with_size:
             args.append("--long")
-        return self.cmdf("ls-tree", treeish, *args, flag=parse_flag(flag, ["none", "stdout"]))
+
+        # Read bytes: text mode would turn a "\r" in a path into "\n"
+        check = "raise" in parse_flag(flag)
+        code, out, _ = command(
+            self.gitpath, *self._args(), "ls-tree", treeish, *args, text=False, check=check, **self._opt()
+        )
+        if code != 0:
+            return None
+
+        # Each item ends with a NUL
+        items = out.split(b"\0")[:-1]
+        return [itm.decode("utf-8", "surrogateescape") for itm in items]
 
     def tree_add_obj(self, cur_tree: str, path: str, treeish: str) -> Any:
         """Add object to tree at specified path."""
@@ -508,9 +522,15 @@ class Git:
         return rst
 
     def tree_new(self, itms: list[str], flag: CmdFlagType = CmdFlag.RAISE) -> Any:
-        """Create new tree from items."""
+        """Create new tree from items.
 
-        treeish = self.cmdf("mktree", input="\n".join(itms), flag=parse_flag(flag, ["none", "oneline"]))
+        An item holds its path as it is, as ``tree_items()`` lists it.
+        """
+
+        # mktree -z reads each item up to a NUL, with the path as it is
+        lines = [itm.encode("utf-8", "surrogateescape") + b"\0" for itm in itms]
+        data = b"".join(lines)
+        treeish = self.cmdf("mktree", "-z", input=data, text=False, flag=parse_flag(flag, ["none", "oneline"]))
         return treeish
 
     def tree_new_replace(
@@ -525,8 +545,7 @@ class Git:
 
         new_items = self.treeitems_replace_item(itms, name, obj, mode=mode)
 
-        new_treeish = self.cmdf("mktree", input="\n".join(new_items), flag=parse_flag(flag, ["none", "oneline"]))
-        return new_treeish
+        return self.tree_new(new_items, flag=flag)
 
     def treeitems_replace_item(self, itms: list[str], name: str, obj: str | None, mode: str | None = None) -> list[str]:
         """Replace item in tree items list."""

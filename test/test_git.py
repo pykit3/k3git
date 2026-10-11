@@ -765,6 +765,31 @@ class TestGitTree(BaseTest):
             files,
         )
 
+    def test_add_tree_quoted_name(self):
+        # Without -z, ls-tree quotes such a name, as "\344\276\235\350\265\226" for 依赖
+        g = Git(GitOpt(), cwd=superp)
+
+        roottreeish = g.tree_of("HEAD")
+
+        for name in ("依赖", 'a"b', "a\tb"):
+            newtree = g.tree_add_obj(roottreeish, name + "/x", roottreeish)
+            newtree = g.tree_add_obj(newtree, name + "/y", roottreeish)
+
+            # y is added into the dir that holds x, not into a second dir of the same name
+            out = cmd0(origit, "ls-tree", "-z", "--name-only", newtree, cwd=superp)
+            self.assertEqual(sorted([".gift", "imsuperman", name]), out.split("\0")[:-1], name)
+
+            out = cmd0(origit, "ls-tree", "-r", "-z", "--name-only", newtree, cwd=superp)
+            files = [
+                ".gift",
+                "imsuperman",
+                name + "/x/.gift",
+                name + "/x/imsuperman",
+                name + "/y/.gift",
+                name + "/y/imsuperman",
+            ]
+            self.assertEqual(sorted(files), out.split("\0")[:-1], name)
+
 
 class TestGitTreeItem(BaseTest):
     def test_treeitem_new(self):
