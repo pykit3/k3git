@@ -14,7 +14,8 @@ class GitOpt:
         cmds: parsed command, e.g. the cmds of parsed ``git --git-dir=/foo fetch origin`` is ``['fetch', 'origin']``.
 
         opt: parsed options. ``opt["others"]`` holds, in order, the git options that GitOpt has no field for,
-            such as ``--literal-pathspecs``. ``to_args()`` passes them on.
+            such as ``-c <name>=<value>`` and ``--literal-pathspecs``. ``to_args()`` passes them on in that order,
+            so that git applies ``-c`` and ``--config-env`` in the order given.
 
         informative_cmds: defines the git options that is a query-like command,
             such as ``--version`` or ``--help``.
@@ -52,7 +53,6 @@ class GitOpt:
     def __init__(self):
         self.opt = {
             "startpath": [],
-            "confkv": [],
             "paging": None,
             "no_replace_objects": False,
             "bare": False,
@@ -121,9 +121,6 @@ class GitOpt:
             if arg == "-C":
                 self.opt["startpath"].append(args.pop(0))
                 continue
-            if arg == "-c":
-                self.opt["confkv"].append(args.pop(0))
-                continue
             if arg.startswith("--exec-path="):
                 self.opt["exec_path"] = arg.split("=", 1)[1]
                 continue
@@ -173,7 +170,7 @@ class GitOpt:
 
             # Pass on any other git option, with its value
             self.opt["others"].append(arg)
-            if arg in ("--config-env", "--attr-source", "--shallow-file"):
+            if arg in ("-c", "--config-env", "--attr-source", "--shallow-file"):
                 self.opt["others"].append(args.pop(0))
 
         return self
@@ -197,10 +194,6 @@ class GitOpt:
         for p in o["startpath"]:
             rst.append("-C")
             rst.append(p)
-
-        for kv in o["confkv"]:
-            rst.append("-c")
-            rst.append(kv)
 
         if o["exec_path"] is not None:
             rst.append("--exec-path=" + o["exec_path"])

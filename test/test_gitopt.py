@@ -179,6 +179,9 @@ class TestGitOpt(unittest.TestCase):
             (["--namespace", "a"], ["--namespace=a"]),
             (["--super-prefix", "a"], ["--super-prefix=a"]),
             (["--literal-pathspecs", "--config-env", "a=B", "--shallow-file", "f"], None),
+            # git applies -c and --config-env in the order given: the last one wins
+            (["--config-env=a.b=B", "-c", "a.b=c"], None),
+            (["-c", "a.b=c", "--literal-pathspecs", "--config-env", "a.b=B"], None),
         )
         for inp, want in cases:
             if want is None:
