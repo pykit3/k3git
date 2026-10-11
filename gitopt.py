@@ -13,7 +13,8 @@ class GitOpt:
     Attributes:
         cmds: parsed command, e.g. the cmds of parsed ``git --git-dir=/foo fetch origin`` is ``['fetch', 'origin']``.
 
-        opt: parsed options.
+        opt: parsed options. ``opt["others"]`` holds, in order, the git options that GitOpt has no field for,
+            such as ``--literal-pathspecs``. ``to_args()`` passes them on.
 
         informative_cmds: defines the git options that is a query-like command,
             such as ``--version`` or ``--help``.
@@ -47,6 +48,7 @@ class GitOpt:
             "namespace": None,
             "super_prefix": None,
             "exec_path": None,
+            "others": [],
         }
         self.informative_cmds = {}
         self.additional = {}
@@ -81,12 +83,17 @@ class GitOpt:
         """
         Parse a command line input(without the "git").
         Additional user defined arguments can be specified.
+        It reads all the git options before the command.
 
         Returns:
             (GitOpt): ``self``.
         """
         while len(args) > 0:
             arg = args.pop(0)
+
+            # git reads "--git-dir <path>" as "--git-dir=<path>"
+            if arg in ("--git-dir", "--work-tree", "--namespace", "--super-prefix") and len(args) > 0:
+                arg = arg + "=" + args.pop(0)
 
             if arg in self.informative_opts:
                 self.informative_cmds[arg] = arg
@@ -104,7 +111,7 @@ class GitOpt:
             if arg in ("-p", "--paginate"):
                 self.opt["paging"] = True
                 continue
-            if arg == "--no-pager":
+            if arg in ("-P", "--no-pager"):
                 self.opt["paging"] = False
                 continue
 
@@ -139,9 +146,16 @@ class GitOpt:
                 self.additional[arg] = arg
                 continue
 
-            # no match, push back
-            self.cmds = [arg] + args
-            break
+            # git stops reading options at the command, and at -h, -v and
+            # --list-cmds=<group>, which it runs as commands
+            if not arg.startswith("-") or arg in ("-h", "-v") or arg.startswith("--list-cmds="):
+                self.cmds = [arg] + args
+                break
+
+            # Pass on any other git option, with its value
+            self.opt["others"].append(arg)
+            if arg in ("--config-env", "--attr-source", "--shallow-file") and len(args) > 0:
+                self.opt["others"].append(args.pop(0))
 
         return self
 
@@ -195,5 +209,7 @@ class GitOpt:
 
         if o["super_prefix"] is not None:
             rst.append("--super-prefix=" + o["super_prefix"])
+
+        rst.extend(o["others"])
 
         return rst

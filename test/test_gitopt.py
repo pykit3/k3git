@@ -45,6 +45,32 @@ class TestGitOpt(unittest.TestCase):
                 ["commit", "--version", "/p"],
                 ["-C", "b"],
             ),
+            (
+                ["-P", "--git-dir=/x", "commit", "--sub"],
+                ["commit", "--sub"],
+                ["--no-pager", "--git-dir=/x"],
+            ),
+            (
+                ["--literal-pathspecs", "--attr-source", "HEAD", "-C", "b", "log", "-p"],
+                ["log", "-p"],
+                ["-C", "b", "--literal-pathspecs", "--attr-source", "HEAD"],
+            ),
+            # git runs -h, -v and --list-cmds=<group> as commands
+            (
+                ["-C", "b", "-h", "--bare"],
+                ["-h", "--bare"],
+                ["-C", "b"],
+            ),
+            (
+                ["-v"],
+                ["-v"],
+                [],
+            ),
+            (
+                ["--list-cmds=main", "--bare"],
+                ["--list-cmds=main", "--bare"],
+                [],
+            ),
         )
 
         for inp, wantcmd, wantargs in cases:
@@ -62,6 +88,12 @@ class TestGitOpt(unittest.TestCase):
                 ["-C", "b", "--foo", "commit", "--bar", "/p"],
                 ["commit", "--bar", "/p"],
                 ["-C", "b"],
+                {"--foo": "--foo"},
+            ),
+            (
+                ["--literal-pathspecs", "--foo", "commit"],
+                ["commit"],
+                ["--literal-pathspecs"],
                 {"--foo": "--foo"},
             ),
         )
@@ -120,6 +152,14 @@ class TestGitOpt(unittest.TestCase):
             (["--work-tree=a"], None),
             (["--namespace=a"], None),
             (["--super-prefix=a"], None),
+            (["-P"], ["--no-pager"]),
+            (["--git-dir", "a"], ["--git-dir=a"]),
+            (["--work-tree", "a"], ["--work-tree=a"]),
+            (["--namespace", "a"], ["--namespace=a"]),
+            (["--super-prefix", "a"], ["--super-prefix=a"]),
+            (["--literal-pathspecs", "--config-env", "a=B", "--shallow-file", "f"], None),
+            # Without a value, git reports the option
+            (["--git-dir"], None),
         )
         for inp, want in cases:
             if want is None:
