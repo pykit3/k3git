@@ -259,6 +259,20 @@ class TestGitWorktree(BaseTest):
         files = g.worktree_staged_files()
         self.assertEqual([], files)
 
+    def test_worktree_staged_files_quoted_name(self):
+        # Without -z, git diff quotes such a name, as "a\tb" for a<TAB>b
+        fwrite(branch_test_worktree_p, ".git", "gitdir: ../branch_test_git")
+
+        g = Git(GitOpt(), cwd=branch_test_worktree_p)
+
+        names = ["a\tb", "a\nb", 'a"b', "依赖"]
+        for name in names:
+            fwrite(branch_test_worktree_p, name, "content")
+        g.add(*names)
+
+        files = g.worktree_staged_files()
+        self.assertEqual(names, files)
+
 
 class TestGitBranch(BaseTest):
     # branch_test_git_p is a git-dir with one commit::

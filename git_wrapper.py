@@ -193,8 +193,10 @@ class Git:
         code, _out, _err = self.cmdf("diff-index", "--quiet", "HEAD", "--", flag=flag)
         return code == 0
 
-    def worktree_staged_files(self, flag: CmdFlagType = "") -> list[str]:
+    def worktree_staged_files(self, flag: CmdFlagType = "") -> list[str] | None:
         """Get list of files with staged changes.
+
+        A path is listed as it is, without the quotes that ``git diff`` adds to a path such as ``a"b``.
 
         Args:
             flag: Command execution flags
@@ -209,7 +211,7 @@ class Git:
             >>> git.worktree_staged_files()
             []  # Nothing staged
         """
-        return self.cmdf("diff", "--name-only", "--cached", flag=parse_flag(flag, ["none", "stdout"]))
+        return self._nul_items("diff", "--name-only", "--cached", "-z", flag=flag)
 
     # branch
 
@@ -442,17 +444,7 @@ class Git:
         if with_size:
             args.append("--long")
 
-        # Read bytes: text mode would turn a "\r" in a path into "\n"
-        check = "raise" in parse_flag(flag)
-        code, out, _ = command(
-            self.gitpath, *self._args(), "ls-tree", treeish, *args, text=False, check=check, **self._opt()
-        )
-        if code != 0:
-            return None
-
-        # Each item ends with a NUL
-        items = out.split(b"\0")[:-1]
-        return [itm.decode("utf-8", "surrogateescape") for itm in items]
+        return self._nul_items("ls-tree", treeish, *args, flag=flag)
 
     def tree_add_obj(self, cur_tree: str, path: str, treeish: str) -> Any:
         """Add object to tree at specified path."""
@@ -747,6 +739,20 @@ class Git:
     def cmdf(self, *args: str, flag: CmdFlagType = "", **kwargs: Any) -> Any:
         """Execute git command with configured options."""
         return cmdf(self.gitpath, *self._args(), *args, flag=flag, **self._opt(**kwargs))
+
+    def _nul_items(self, *args: str, flag: CmdFlagType) -> list[str] | None:
+        """Run a git command whose output items each end with a NUL, such as ``ls-tree -z``.
+
+        Returns None if git fails and ``flag`` has no ``raise``.
+        """
+        # Read bytes: text mode would turn a "\r" in a path into "\n"
+        check = "raise" in parse_flag(flag)
+        code, out, _ = command(self.gitpath, *self._args(), *args, text=False, check=check, **self._opt())
+        if code != 0:
+            return None
+
+        items = out.split(b"\0")[:-1]
+        return [itm.decode("utf-8", "surrogateescape") for itm in items]
 
     def out(self, fd: int, *msg: str) -> None:
         """Write formatted output to file descriptor."""
