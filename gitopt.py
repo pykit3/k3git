@@ -36,6 +36,19 @@ class GitOpt:
         "--exec-path",
     )
 
+    # options that take the next arg as their value, such as "-C <path>"
+    value_opts = (
+        "-C",
+        "-c",
+        "--git-dir",
+        "--work-tree",
+        "--namespace",
+        "--super-prefix",
+        "--config-env",
+        "--attr-source",
+        "--shallow-file",
+    )
+
     def __init__(self):
         self.opt = {
             "startpath": [],
@@ -83,7 +96,8 @@ class GitOpt:
         """
         Parse a command line input(without the "git").
         Additional user defined arguments can be specified.
-        It reads all the git options before the command.
+        It reads all the git options before the command. An option without its value,
+        such as a last ``-C``, stays in ``cmds``, so that git reports it.
 
         Returns:
             (GitOpt): ``self``.
@@ -91,8 +105,13 @@ class GitOpt:
         while len(args) > 0:
             arg = args.pop(0)
 
+            # git stops at an option without its value, and reports it
+            if arg in self.value_opts and len(args) == 0:
+                self.cmds = [arg]
+                break
+
             # git reads "--git-dir <path>" as "--git-dir=<path>"
-            if arg in ("--git-dir", "--work-tree", "--namespace", "--super-prefix") and len(args) > 0:
+            if arg in ("--git-dir", "--work-tree", "--namespace", "--super-prefix"):
                 arg = arg + "=" + args.pop(0)
 
             if arg in self.informative_opts:
@@ -154,7 +173,7 @@ class GitOpt:
 
             # Pass on any other git option, with its value
             self.opt["others"].append(arg)
-            if arg in ("--config-env", "--attr-source", "--shallow-file") and len(args) > 0:
+            if arg in ("--config-env", "--attr-source", "--shallow-file"):
                 self.opt["others"].append(args.pop(0))
 
         return self

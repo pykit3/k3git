@@ -71,6 +71,27 @@ class TestGitOpt(unittest.TestCase):
                 ["--list-cmds=main", "--bare"],
                 [],
             ),
+            # git stops at an option without its value, and reports it
+            (
+                ["-C"],
+                ["-C"],
+                [],
+            ),
+            (
+                ["-P", "-c"],
+                ["-c"],
+                ["--no-pager"],
+            ),
+            (
+                ["--git-dir"],
+                ["--git-dir"],
+                [],
+            ),
+            (
+                ["--literal-pathspecs", "--config-env"],
+                ["--config-env"],
+                ["--literal-pathspecs"],
+            ),
         )
 
         for inp, wantcmd, wantargs in cases:
@@ -158,8 +179,6 @@ class TestGitOpt(unittest.TestCase):
             (["--namespace", "a"], ["--namespace=a"]),
             (["--super-prefix", "a"], ["--super-prefix=a"]),
             (["--literal-pathspecs", "--config-env", "a=B", "--shallow-file", "f"], None),
-            # Without a value, git reports the option
-            (["--git-dir"], None),
         )
         for inp, want in cases:
             if want is None:
