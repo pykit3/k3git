@@ -1,5 +1,6 @@
 import os
 import unittest
+from unittest import mock
 
 import k3ut
 
@@ -249,3 +250,15 @@ class TestGitUrl(unittest.TestCase):
 
             del os.environ["GITHUB_USERNAME"]
             del os.environ["GITHUB_TOKEN"]
+
+    def test_giturl_parse_username_from_env(self):
+        # Without GITHUB_TOKEN there is no credential to put in an https url
+        env = dict(os.environ)
+        env.pop("GITHUB_TOKEN", None)
+        env["GITHUB_USERNAME"] = "foo"
+        with mock.patch.dict(os.environ, env, clear=True):
+            got = GitUrl.parse("https://github.com/openacid/slim")
+
+        self.assertEqual("git@github.com:openacid/slim.git", got.fmt("ssh"))
+        self.assertEqual("https://github.com/openacid/slim.git", got.fmt("https"))
+        self.assertEqual("https://github.com/openacid/slim.git", got.fmt())

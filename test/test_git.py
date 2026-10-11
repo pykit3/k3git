@@ -4,7 +4,7 @@ import unittest
 
 import k3ut
 from k3fs import fread, fwrite
-from k3handy import CMD_RAISE_ONELINE, CMD_RAISE_STDOUT, CalledProcessError, CmdFlag
+from k3handy import CMD_RAISE_ONELINE, CMD_RAISE_STDOUT, CalledProcessError, CmdFlag, command
 from k3handy.cmdutil import cmd0, cmdf, cmdout, cmdx
 from k3handy.path import pjoin
 
@@ -771,15 +771,16 @@ class TestGitTree(BaseTest):
 
         roottreeish = g.tree_of("HEAD")
 
-        for name in ("依赖", 'a"b', "a\tb"):
+        for name in ("依赖", 'a"b', "a\tb", "a\nb"):
             newtree = g.tree_add_obj(roottreeish, name + "/x", roottreeish)
             newtree = g.tree_add_obj(newtree, name + "/y", roottreeish)
 
             # y is added into the dir that holds x, not into a second dir of the same name
-            out = cmd0(origit, "ls-tree", "-z", "--name-only", newtree, cwd=superp)
+            # command() keeps the whole output, while cmd0() would stop at the newline in a\nb
+            _, out, _ = command(origit, "ls-tree", "-z", "--name-only", newtree, cwd=superp, check=True)
             self.assertEqual(sorted([".gift", "imsuperman", name]), out.split("\0")[:-1], name)
 
-            out = cmd0(origit, "ls-tree", "-r", "-z", "--name-only", newtree, cwd=superp)
+            _, out, _ = command(origit, "ls-tree", "-r", "-z", "--name-only", newtree, cwd=superp, check=True)
             files = [
                 ".gift",
                 "imsuperman",
@@ -935,6 +936,19 @@ class TestGitLog(BaseTest):
 
         commits = g.log_grep("content1", grep_type="S", flag=CmdFlag.RAISE)
         self.assertEqual([parent], commits)
+
+        # Search authors and committers: the test repo commits as "Your Name"
+        g.cmdf("commit", "--allow-empty", "-m", "by alice", "--author=Alice <alice@example.com>", flag=CmdFlag.RAISE)
+        alice = g.cmdf("rev-parse", "HEAD", flag=[CmdFlag.RAISE, CmdFlag.NONE, CmdFlag.ONELINE])
+
+        commits = g.log_grep("Alice", grep_type="author", flag=CmdFlag.RAISE)
+        self.assertEqual([alice], commits)
+
+        commits = g.log_grep("Alice", grep_type="committer", flag=CmdFlag.RAISE)
+        self.assertEqual([], commits)
+
+        commits = g.log_grep("Your Name", grep_type="committer", flag=CmdFlag.RAISE)
+        self.assertEqual([alice, head, parent], commits)
 
         # Empty pattern validation
         with self.assertRaises(ValueError):
