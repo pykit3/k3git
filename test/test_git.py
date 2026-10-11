@@ -926,6 +926,16 @@ class TestGitLog(BaseTest):
         commits = g.log_grep("nonexistent")
         self.assertEqual([], commits)
 
+        # Search changed file contents with the pickaxe options -G and -S
+        head = g.cmdf("rev-parse", "HEAD", flag=[CmdFlag.RAISE, CmdFlag.NONE, CmdFlag.ONELINE])
+        parent = g.cmdf("rev-parse", "HEAD~", flag=[CmdFlag.RAISE, CmdFlag.NONE, CmdFlag.ONELINE])
+
+        commits = g.log_grep("content2", grep_type="G", flag=CmdFlag.RAISE)
+        self.assertEqual([head], commits)
+
+        commits = g.log_grep("content1", grep_type="S", flag=CmdFlag.RAISE)
+        self.assertEqual([parent], commits)
+
         # Empty pattern validation
         with self.assertRaises(ValueError):
             g.log_grep("")

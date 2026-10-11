@@ -711,10 +711,18 @@ class Git:
         if not pattern:
             raise ValueError("pattern cannot be empty")
 
-        if grep_type not in ("grep", "G", "S", "author", "committer"):
+        # git takes the pickaxe options only as -G<regex> and -S<string>
+        grep_opts = {
+            "grep": "--grep=",
+            "G": "-G",
+            "S": "-S",
+            "author": "--author=",
+            "committer": "--committer=",
+        }
+        if grep_type not in grep_opts:
             raise ValueError(f"Invalid grep_type: {grep_type}")
 
-        args = ["log", f"--{grep_type}={pattern}", "--format=%H"]
+        args = ["log", grep_opts[grep_type] + pattern, "--format=%H"]
         if max_count is not None:
             if max_count < 1:
                 raise ValueError("max_count must be >= 1")
