@@ -57,9 +57,10 @@ class Git:
             str: Absolute path to repository root, or None if not in a git repo
 
         Examples:
-            >>> git.repo_root()
-            '/Users/user/project'
-            >>> git.repo_root(flag=CmdFlag.RAISE)  # Raises if not in git repo
+            ```python
+            git.repo_root()  # '/Users/user/project'
+            git.repo_root(flag=CmdFlag.RAISE)  # Raises if not in git repo
+            ```
         """
         return self.cmdf("rev-parse", "--show-toplevel", flag=parse_flag(flag, ["none", "oneline"]))
 
@@ -73,12 +74,11 @@ class Git:
             bool: True if path contains .git directory or file
 
         Examples:
-            >>> git.repo_is_repository('/path/to/repo')
-            True
-            >>> git.repo_is_repository('/path/to/non-repo')
-            False
-            >>> git.repo_is_repository()  # Check current directory
-            True
+            ```python
+            git.repo_is_repository('/path/to/repo')  # True
+            git.repo_is_repository('/path/to/non-repo')  # False
+            git.repo_is_repository()  # True: checks the current directory
+            ```
         """
         if path is None:
             check_path = self.cwd if self.cwd is not None else os.getcwd()
@@ -108,11 +108,13 @@ class Git:
             flag: Command execution flags
 
         Examples:
-            >>> git.fetch_url('https://github.com/user/repo.git',
-            ...               'refs/heads/main:refs/remotes/tmp/main')
-            >>> git.fetch_url('git@github.com:user/repo.git',
-            ...               '+refs/heads/*:refs/remotes/mirror/*',
-            ...               no_tags=False)
+            ```python
+            git.fetch_url('https://github.com/user/repo.git',
+                          'refs/heads/main:refs/remotes/tmp/main')
+            git.fetch_url('git@github.com:user/repo.git',
+                          '+refs/heads/*:refs/remotes/mirror/*',
+                          no_tags=False)
+            ```
 
         Raises:
             ValueError: If url or refspec is empty
@@ -139,10 +141,12 @@ class Git:
             flag: Command execution flags
 
         Examples:
+            ```python
             git.add('file.txt')          # git add file.txt
-            git.add('\\*.py', 'docs/')     # git add \\*.py docs/
+            git.add('*.py', 'docs/')     # git add *.py docs/
             git.add(update=True)         # git add -u (updates all tracked files)
             git.add('src/', update=True) # git add -u src/
+            ```
 
         Raises:
             ValueError: If no files provided and update=False
@@ -205,11 +209,11 @@ class Git:
             list: Filenames of staged files (empty list if nothing staged)
 
         Examples:
-            >>> git.add('file1.txt', 'file2.txt')
-            >>> git.worktree_staged_files()
-            ['file1.txt', 'file2.txt']
-            >>> git.worktree_staged_files()
-            []  # Nothing staged
+            ```python
+            git.add('file1.txt', 'file2.txt')
+            git.worktree_staged_files()  # ['file1.txt', 'file2.txt']
+            git.worktree_staged_files()  # []: nothing staged
+            ```
         """
         return self._nul_items("diff", "--name-only", "--cached", "-z", flag=flag)
 
@@ -280,8 +284,10 @@ class Git:
             flag: Command execution flags
 
         Examples:
-            >>> git.branch_rebase('master')
-            >>> git.branch_rebase('origin/main')
+            ```python
+            git.branch_rebase('master')
+            git.branch_rebase('origin/main')
+            ```
 
         Raises:
             ValueError: If upstream is empty
@@ -300,8 +306,10 @@ class Git:
             flag: Command execution flags
 
         Examples:
-            >>> git.branch_merge_ff('origin/master')
-            >>> git.branch_merge_ff()  # Merges tracking branch
+            ```python
+            git.branch_merge_ff('origin/master')
+            git.branch_merge_ff()  # Merges tracking branch
+            ```
 
         Raises:
             ValueError: If upstream is empty string
@@ -341,8 +349,10 @@ class Git:
             flag: Command execution flags
 
         Examples:
-            >>> git.remote_push('origin', 'master')
-            >>> git.remote_push('backup', 'develop')
+            ```python
+            git.remote_push('origin', 'master')
+            git.remote_push('backup', 'develop')
+            ```
 
         Raises:
             ValueError: If remote or branch is empty
@@ -366,10 +376,11 @@ class Git:
             dict: Map of remote name to success status (True/False)
 
         Examples:
-            >>> git.remote_push_all('master')
-            {'origin': True, 'backup': True}
-            >>> git.remote_push_all('develop', flag='')  # Continue on errors
-            {'origin': True, 'backup': False}  # backup failed but didn't raise
+            ```python
+            git.remote_push_all('master')  # {'origin': True, 'backup': True}
+            # Continue on errors: backup failed but didn't raise
+            git.remote_push_all('develop', flag='')  # {'origin': True, 'backup': False}
+            ```
 
         Raises:
             ValueError: If branch is empty
@@ -607,8 +618,10 @@ class Git:
             flag: Command execution flags
 
         Examples:
-            >>> git.ref_delete('refs/heads/feature-branch')
-            >>> git.ref_delete('refs/tags/old-tag')
+            ```python
+            git.ref_delete('refs/heads/feature-branch')
+            git.ref_delete('refs/tags/old-tag')
+            ```
 
         Raises:
             ValueError: If ref is empty
@@ -656,12 +669,11 @@ class Git:
             str: Formatted date string, or None if ref not found
 
         Examples:
-            >>> git.log_date('HEAD')
-            'Mon Aug 14 20:47:31 2023 +0800'
-            >>> git.log_date('master', format='%ai')
-            '2023-08-14 20:47:31 +0800'
-            >>> git.log_date('nonexistent')
-            None
+            ```python
+            git.log_date('HEAD')  # 'Mon Aug 14 20:47:31 2023 +0800'
+            git.log_date('master', format='%ai')  # '2023-08-14 20:47:31 +0800'
+            git.log_date('nonexistent')  # None
+            ```
 
         Raises:
             ValueError: If ref is empty string
@@ -690,12 +702,11 @@ class Git:
             list: Commit hashes matching pattern (newest first), empty list if none found
 
         Examples:
-            >>> git.log_grep('fix bug')  # Search commit messages
-            ['abc123...', 'def456...']
-            >>> git.log_grep('TODO', grep_type='G')  # Search file contents
-            ['ghi789...']
-            >>> git.log_grep('squash', max_count=1)  # Get latest matching commit
-            ['abc123...']
+            ```python
+            git.log_grep('fix bug')  # Search commit messages: ['abc123...', 'def456...']
+            git.log_grep('TODO', grep_type='G')  # Search file contents: ['ghi789...']
+            git.log_grep('squash', max_count=1)  # Latest matching commit: ['abc123...']
+            ```
 
         Raises:
             ValueError: If pattern is empty or grep_type invalid or max_count < 1
