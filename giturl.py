@@ -184,7 +184,7 @@ class GitUrl:
 
                 - ``"https": 'https://{host}/{user}/{repo}.git'``,
 
-                - ``"https" with token present in fields: 'https://{committer}:{token}@{host}/{user}/{repo}.git'``,
+                - ``"https" with token and committer in fields: 'https://{committer}:{token}@{host}/{user}/{repo}.git'``,
 
                 If absent, format by fields['scheme']
 
@@ -196,7 +196,9 @@ class GitUrl:
             scheme = self.fields["scheme"]
 
         if scheme == "https":
-            if "token" in self.fields:
+            # The env can give a token without a committer.
+            has_credential = "token" in self.fields and "committer" in self.fields
+            if has_credential:
                 fmt = self.rule_group["fmt"]["https_token"]
             else:
                 fmt = self.rule_group["fmt"]["https"]

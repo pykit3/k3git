@@ -262,3 +262,15 @@ class TestGitUrl(unittest.TestCase):
         self.assertEqual("git@github.com:openacid/slim.git", got.fmt("ssh"))
         self.assertEqual("https://github.com/openacid/slim.git", got.fmt("https"))
         self.assertEqual("https://github.com/openacid/slim.git", got.fmt())
+
+    def test_giturl_parse_token_from_env_without_username(self):
+        # Without GITHUB_USERNAME there is no committer to put before the token
+        env = dict(os.environ)
+        env.pop("GITHUB_USERNAME", None)
+        env["GITHUB_TOKEN"] = "bar"
+        with mock.patch.dict(os.environ, env, clear=True):
+            got = GitUrl.parse("https://github.com/openacid/slim")
+
+        self.assertEqual("git@github.com:openacid/slim.git", got.fmt("ssh"))
+        self.assertEqual("https://github.com/openacid/slim.git", got.fmt("https"))
+        self.assertEqual("https://github.com/openacid/slim.git", got.fmt())
