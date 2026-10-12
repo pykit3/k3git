@@ -534,6 +534,9 @@ class Git:
         lines = [itm.encode("utf-8", "surrogateescape") + b"\0" for itm in itms]
         data = b"".join(lines)
         treeish = self.cmdf("mktree", "-z", input=data, text=False, flag=parse_flag(flag, ["none", "oneline"]))
+        # A newer k3handy keeps the output as bytes for text=False; the hash is ASCII.
+        if isinstance(treeish, bytes):
+            treeish = treeish.decode()
         return treeish
 
     def tree_new_replace(

@@ -1,6 +1,7 @@
 import os
 import shutil
 import unittest
+from unittest import mock
 
 import k3ut
 from k3fs import fread, fwrite
@@ -655,6 +656,16 @@ class TestGitTree(BaseTest):
             ],
             got,
         )
+
+    def test_tree_new_bytes_output(self):
+        # A newer k3handy keeps the output of text=False as bytes; tree_new() still returns str.
+        g = Git(GitOpt(), cwd=superp)
+        tree_hash = "87486e2d4543eb0dd99c1064cc87abdf399cde9f"
+
+        with mock.patch("k3git.git_wrapper.cmdf", return_value=tree_hash.encode()):
+            treeish = g.tree_new([])
+
+        self.assertEqual(tree_hash, treeish)
 
     def test_tree_new_replace(self):
         g = Git(GitOpt(), cwd=superp)
